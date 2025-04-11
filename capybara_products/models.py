@@ -39,6 +39,11 @@ class Product(models.Model):
         if first_image:
             return first_image.image
         return None
+    
+    def delete(self, *args, **kwargs):
+        for image in self.images.all():
+            image.image.delete(save=False)
+        super().delete(*args, **kwargs)
 
 
 class ProductImage(models.Model):
