@@ -5,6 +5,6 @@ from .models import TelegramUser
 from .serializers import UserSerializer
 
 
-class CurrencyAPIView(generics.ListAPIView):
-    queryset = TelegramUser.objects.all()
+class UserAPIView(generics.ListAPIView):
+    queryset = TelegramUser.objects.prefetch_related("groups").all()
     serializer_class = UserSerializer

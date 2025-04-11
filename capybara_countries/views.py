@@ -6,5 +6,5 @@ from .serializers import CountriesSerializer
 
 
 class CountriesAPIView(generics.ListAPIView):
-    queryset = Country.objects.all()
+    queryset = Country.objects.prefetch_related("cities").all()
     serializer_class = CountriesSerializer
