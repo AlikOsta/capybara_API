@@ -12,9 +12,10 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = os.getenv('DEBUG')
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS')
+ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
+    'django_cleanup.apps.CleanupConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

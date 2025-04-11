@@ -40,16 +40,10 @@ class Product(models.Model):
             return first_image.image
         return None
     
-    def delete(self, *args, **kwargs):
-        for image in self.images.all():
-            image.image.delete(save=False)
-        super().delete(*args, **kwargs)
-
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to="products/", verbose_name="Image")
-    is_main = models.BooleanField(default=False, verbose_name="Main image")
 
     def __str__(self) -> str:
         return f"Image for {self.product.title} (main={self.is_main})"

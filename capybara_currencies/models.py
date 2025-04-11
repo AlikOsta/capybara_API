@@ -2,13 +2,13 @@ from django.db import models
 
 
 class Currency(models.Model):
-    name = models.CharField(max_length=20, db_index=True, verbose_name="Название")
-    code = models.CharField(max_length=8, db_index=True, verbose_name="Код")
-    order = models.SmallIntegerField(default=0, db_index=True, verbose_name='Порядок')
+    name = models.CharField(max_length=20, db_index=True, verbose_name="Name")
+    code = models.CharField(max_length=8, db_index=True, verbose_name="Code")
+    order = models.SmallIntegerField(default=0, db_index=True, verbose_name='Order')
 
     class Meta:
-        verbose_name = "Валюта"
-        verbose_name_plural = "Валюты"
+        verbose_name = "Currency"
+        verbose_name_plural = "Currencies"
         ordering = ['order']
 
     def __str__(self) -> str:

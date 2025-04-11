@@ -1,28 +1,36 @@
 
-from PIL import Image
+import os
+from PIL import Image, ExifTags
 from io import BytesIO
 from django.core.files.base import ContentFile
 
 
+def apply_exif_orientation(image):
+    try:
+        exif = image._getexif()
+        if not exif:
+            return image
+        exif_dict = dict(exif.items())
+        orientation_key = [k for k, v in ExifTags.TAGS.items() if v == "Orientation"][0]
+        orientation = exif_dict.get(orientation_key)
+
+        if orientation == 3:
+            image = image.rotate(180, expand=True)
+        elif orientation == 6:
+            image = image.rotate(270, expand=True)
+        elif orientation == 8:
+            image = image.rotate(90, expand=True)
+    except Exception:
+        pass  
+    return image
+
 def process_image(image_field, instans_id=None, max_size=(800, 800), format="WEBP", quality=65):
-    """
-    Process an image by resizing it and converting to WEBP format.
-    
-    Args:
-        image_field: The image field to process
-        instance_id: ID of the model instance (optional)
-        max_size: Maximum dimensions for the image
-        format: Output format (default: WEBP)
-        quality: Image quality (0-100)
-        
-    Returns:
-        ContentFile: Processed image as ContentFile
-    """
 
     if not image_field:
         return None
     
     img = Image.open(image_field)
+    img = apply_exif_orientation(img)
 
     if img.width > max_size[0] or img.height > max_size[1]:
         img.thumbnail(max_size)
@@ -31,7 +39,12 @@ def process_image(image_field, instans_id=None, max_size=(800, 800), format="WEB
         img = img.convert("RGB")
     
     output = BytesIO()
-    img.save(output, format=format, quality=quality, optimize=True)
+
+    try:
+        img.save(output, format=format, quality=quality, optimize=True)
+    except OSError:
+        img.save(output, format=format, quality=quality)
+        
     output.seek(0)
     
     base_name = image_field.name.rsplit(".", 1)[0]
