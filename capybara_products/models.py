@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
-from choices import STATUS_CHOICES
+from .choices import STATUS_CHOICES
 from .utils_img import process_image
 
 
@@ -27,10 +27,10 @@ class Product(models.Model):
     def __str__(self) -> str:
         return self.title
     
-    def get_absolute_url(self):
+    def get_absolute_url(self) -> str:
         return reverse("product:product_detail", kwargs={"pk": self.pk})
     
-    def get_view_count(self):
+    def get_view_count(self) -> int:
         return self.views.count()
     
     @property
@@ -51,7 +51,7 @@ class ProductImage(models.Model):
     image = models.ImageField(upload_to="products/", verbose_name="Image")
     is_main = models.BooleanField(default=False, verbose_name="Main image")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Image for {self.product.title} (main={self.is_main})"
     
     def save(self, *args, **kwargs):
@@ -98,5 +98,5 @@ class ProductView(models.Model):
         ]
         ordering = ['-created_at']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.product.title} - {self.user.username}"

@@ -11,7 +11,7 @@ class Currency(models.Model):
         verbose_name_plural = "Валюты"
         ordering = ['order']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 

@@ -10,7 +10,7 @@ class Country(models.Model):
         verbose_name_plural = "Countries"
         ordering = ['name']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -23,5 +23,5 @@ class City(models.Model):
         verbose_name_plural = "Cities"
         ordering = ['name']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
