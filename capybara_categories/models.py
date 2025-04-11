@@ -8,6 +8,11 @@ class Category(models.Model):
     slug = models.SlugField(max_length=50, unique=True, verbose_name="Slug")
     image = models.ImageField(upload_to='media/images/cat_img/', blank=True, null=True, verbose_name="Image")
 
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+        ordering = ['order']
+        
     def __str__(self):
         return self.name
     
@@ -18,7 +23,3 @@ class Category(models.Model):
     def get_absolute_url(self):
         return reverse("category:category_detail", kwargs={"pk": self.pk})
     
-    class Meta:
-        verbose_name = "Category"
-        verbose_name_plural = "Categories"
-        ordering = ['order']

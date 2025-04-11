@@ -11,10 +11,10 @@ class Product(models.Model):
     category =models.ForeignKey("capybara_categories.Category", on_delete=models.PROTECT, db_index=True, verbose_name="Category")
     title = models.CharField(max_length=50, db_index=True, verbose_name="Title")
     description = models.TextField(max_length = 350, verbose_name = "Description")
-    price = models.IntegerField(verbose_name="Price")
-    currency = models.ForeignKey("capybara_currencies.Currency", null=True, on_delete=models.PROTECT, verbose_name="Currency")
     country = models.ForeignKey("capybara_countries.Country", null=True, on_delete=models.PROTECT, verbose_name="Country")
     city = models.ForeignKey("capybara_countries.City", null=True, on_delete=models.PROTECT, db_index=True, verbose_name="City")
+    price = models.IntegerField(verbose_name="Price")
+    currency = models.ForeignKey("capybara_currencies.Currency", null=True, on_delete=models.PROTECT, verbose_name="Currency")
     status = models.IntegerField(choices=STATUS_CHOICES, default=0, verbose_name="Status")
     create_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Date create")
     update_at = models.DateTimeField(auto_now=True, verbose_name="Date update")
@@ -53,7 +53,6 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.product.title} (main={self.is_main})"
-
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -71,9 +70,6 @@ class Favorite(models.Model):
     product = models.ForeignKey("Product", on_delete=models.CASCADE, related_name='favorited_by', verbose_name="Product")
     create_at = models.DateTimeField(auto_now=True, verbose_name="Date create")
 
-    def __str__(self) -> str:
-        return f"{self.user.username} - {self.product.title}"
-
     class Meta:
         verbose_name = "Favorite"
         verbose_name_plural = "Favorites"
@@ -82,14 +78,14 @@ class Favorite(models.Model):
         ]
         ordering = ["-create_at"]
 
+    def __str__(self) -> str:
+        return f"{self.user.username} - {self.product.title}"
+
 
 class ProductView(models.Model):
     product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='views', verbose_name='Product')
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, verbose_name='User')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Date create')
-
-    def __str__(self):
-        return f"{self.product.title} - {self.user.username}"
 
     class Meta:
         verbose_name = 'Product View'
@@ -101,3 +97,6 @@ class ProductView(models.Model):
             ),
         ]
         ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.product.title} - {self.user.username}"
