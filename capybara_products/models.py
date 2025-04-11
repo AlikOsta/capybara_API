@@ -8,7 +8,7 @@ from .utils_img import process_image
 
 class Product(models.Model):
     author = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, verbose_name="Author")
-    category =models.ForeignKey("capybara_categories.Category", on_delete=models.PROTECT, db_index=True, verbose_name="Category")
+    category =models.ForeignKey("capybara_categories.Category", on_delete=models.PROTECT, db_index=True, related_name="products", verbose_name="Category")
     title = models.CharField(max_length=50, db_index=True, verbose_name="Title")
     description = models.TextField(max_length = 350, verbose_name = "Description")
     country = models.ForeignKey("capybara_countries.Country", null=True, on_delete=models.PROTECT, verbose_name="Country")
@@ -79,7 +79,6 @@ class Favorite(models.Model):
 class ProductView(models.Model):
     product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='views', verbose_name='Product')
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, verbose_name='User')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Date create')
 
     class Meta:
         verbose_name = 'Product View'
@@ -90,7 +89,6 @@ class ProductView(models.Model):
                 name='unique_product_user_view'
             ),
         ]
-        ordering = ['-created_at']
 
     def __str__(self) -> str:
         return f"{self.product.title} - {self.user.username}"
