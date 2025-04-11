@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
+from capybara_currencies.models import Currency
+
 from choices import STATUS_CHOICES
 from .utils_img import process_image
 
