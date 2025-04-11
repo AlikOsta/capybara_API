@@ -40,7 +40,6 @@ class Product(models.Model):
     
     @property
     def main_image(self):
-        """Возвращает главное изображение продукта (первое в списке)"""
         first_image = self.images.first()
         if first_image:
             return first_image.image
@@ -62,3 +61,18 @@ class ProductImage(models.Model):
             self.image = process_image(self.image, self.id)
 
         super().save(*args, **kwargs)
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='favorites', verbose_name="User")
+    product = models.ForeignKey("Product", on_delete=models.CASCADE, related_name='favorited_by', verbose_name="Product")
+    create_at = models.DateTimeField(auto_now=True, verbose_name="Date create")
+
+    def __str__(self) -> str:
+        return f"{self.user.username} - {self.product.title}"
+
+    class Meta:
+        verbose_name = "Favorite"
+        verbose_name_plural = "Favorites"
+        unique_together = ('user', 'product')
+        ordering = ["-create_at"]
