@@ -1,13 +1,18 @@
 
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-7r6bb4=@9w^^_*j-l*^*=$u)9a8=^mk8+ku*eq_ctj!vp#@6xw'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -92,3 +97,29 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'capybara_tg_user.TelegramUser'
+
+BASE_MINIAPP_URL = os.getenv("BASE_URL")
+
+PHOTO_START = os.getenv("PHOTO_START")
+
+PHOTO_HELP = os.getenv("PHOTO_HELP")
+
+PHOTO_INFO = os.getenv("PHOTO_INFO")
+
+PHOTO_ERROR = os.getenv("PHOTO_ERROR")
+
+SAPPORT_URL = os.getenv("SAPPORT_URL")
+
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY") 
+
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
