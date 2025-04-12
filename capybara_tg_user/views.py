@@ -1,10 +1,17 @@
-from django.shortcuts import render
-from rest_framework import generics
-
+# views.py
+from rest_framework import viewsets, mixins
+from rest_framework.permissions import IsAuthenticated
 from .models import TelegramUser
-from .serializers import UserSerializer
+from .serializers import TelegramUserSerializer
+from .permissions import IsSelfOrReadOnly
 
+class UserViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = TelegramUser.objects.all()
+    serializer_class = TelegramUserSerializer
+    permission_classes = [IsAuthenticated, IsSelfOrReadOnly]
 
-class UserAPIView(generics.ListAPIView):
-    queryset = TelegramUser.objects.prefetch_related("groups").all()
-    serializer_class = UserSerializer

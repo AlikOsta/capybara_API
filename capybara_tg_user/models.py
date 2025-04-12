@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.urls import reverse
 
 
 class TelegramUser(AbstractUser):
@@ -15,3 +16,6 @@ class TelegramUser(AbstractUser):
 
     def __str__(self):
         return self.get_full_name() or self.username or str(self.telegram_id)
+    
+    def det_absolute_url(self):
+        return reverse('user:user-profile', kwargs={'pk': self.pk})

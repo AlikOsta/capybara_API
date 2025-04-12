@@ -1,9 +1,22 @@
-from django.urls import path
-from .views import UserAPIView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import UserViewSet
+
+"""
+GET /users/v1/users/
+
+GET /users/v1/users/{pk}/
+
+PUT /users/v1/users/{pk}/
+
+PATCH /users/v1/users/{pk}/
+
+"""
 
 
-app_name = 'user'
+router = DefaultRouter()
+router.register(r'users', UserViewSet, basename='user')
 
 urlpatterns = [
-    path('api/v1/user/',  UserAPIView.as_view()), #'currencies/api/v1/currency_list/',
+    path('v1/', include(router.urls)),
 ]
