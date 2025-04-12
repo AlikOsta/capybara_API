@@ -1,10 +1,19 @@
-from django.shortcuts import render
-from rest_framework import generics
+from rest_framework import viewsets
+from rest_framework.permissions import AllowAny
+from .models import Country
+from .serializers import CountrySerializer, CountryDetailSerializer
 
-from .models import Country, City
-from .serializers import CountriesSerializer
 
+class CountryViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    GET  /countries-cities/v1/countries/        — список стран
+    GET  /countries-cities/v1/countries/{pk}/   — детали страны + её города
+    """
+    queryset = Country.objects.all().prefetch_related('cities')
+    permission_classes = [AllowAny]
+    lookup_field = 'pk'  
 
-class CountriesAPIView(generics.ListAPIView):
-    queryset = Country.objects.prefetch_related("cities").all()
-    serializer_class = CountriesSerializer
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return CountryDetailSerializer
+        return CountrySerializer

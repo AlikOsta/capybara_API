@@ -1,18 +1,20 @@
 from rest_framework import serializers
 from .models import Country, City
 
-from capybara_currencies.serializers import CurrenciseSerializer
-
-
-class CitiesSerializer(serializers.ModelSerializer):
+class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
         fields = ['id', 'name']
 
 
-class CountriesSerializer(serializers.ModelSerializer):
-    cities = CitiesSerializer(many=True, read_only=True)
-
+class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
-        fields = ['id', 'name', 'cities']
+        fields = ['id', 'name']
+
+
+class CountryDetailSerializer(CountrySerializer):
+    cities = CitySerializer(many=True, read_only=True)
+
+    class Meta(CountrySerializer.Meta):
+        fields = CountrySerializer.Meta.fields + ['cities']
