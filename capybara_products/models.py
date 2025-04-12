@@ -30,6 +30,9 @@ class Product(models.Model):
     def get_absolute_url(self) -> str:
         return reverse("product:product_detail", kwargs={"pk": self.pk})
     
+    def get_author_url(self) -> str:
+        return reverse("user-detail", kwargs={"pk": self.author.pk})
+    
     def get_view_count(self) -> int:
         return self.views.count()
     

@@ -15,7 +15,6 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     lookup_field = 'slug'
 
-    # Предзагружаем связанные продукты (только с status=3 — опубликованные)
     queryset = Category.objects.all().prefetch_related(
         Prefetch(
             'products',
