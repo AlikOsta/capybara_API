@@ -1,10 +1,13 @@
-from django.shortcuts import render
-from rest_framework import generics
-
+from rest_framework import viewsets
+from rest_framework.permissions import AllowAny
 from .models import Currency
-from .serializers import CurrenciseSerializer
+from .serializers import CurrencySerializer
 
-
-class CurrenciesAPIView(generics.ListAPIView):
+class CurrencyViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    GET /currencies/v1/currencies/       — список валют
+    """
+    
     queryset = Currency.objects.all()
-    serializer_class = CurrenciseSerializer
+    serializer_class = CurrencySerializer
+    permission_classes = [AllowAny]
