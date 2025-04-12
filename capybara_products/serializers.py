@@ -1,25 +1,65 @@
 from rest_framework import serializers
-
-from .models import Product
-from .models import ProductImage
-from .models import ProductView
-
-from capybara_countries.serializers import CountriesSerializer
-# from capybara_categories.serializers import CategoriesSerializer
-from capybara_currencies.serializers import CurrenciseSerializer
+from django.urls import reverse
+from .models import Product, ProductImage, Favorite
 
 
-class ProductViewsSerializer(serializers.ModelSerializer):
+class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProductView
-        fields = ('id', 'product',)
+        model = ProductImage
+        fields = ['id', 'image']
 
 
-class ProductsSerializer(serializers.ModelSerializer):
-    country = CountriesSerializer(read_only=True)
-    # category = CategoriesSerializer(read_only=True)
-    currency = CurrenciseSerializer(read_only=True)
+class ProductListSerializer(serializers.ModelSerializer):
+    author = serializers.CharField(source='author.username', read_only=True)
+    category = serializers.CharField(source='category.name', read_only=True)
+    currency = serializers.CharField(source='currency.code', read_only=True)
+    main_image = serializers.ImageField(read_only=True)
+    views_count = serializers.IntegerField(read_only=True)
+    favorites_count = serializers.IntegerField(read_only=True)
+    is_favorited = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ('id', 'title', 'price', 'currency', 'category', 'country', 'status', 'create_at')
+        fields = fields = "__all__"
+
+    def get_is_favorited(self, obj):
+
+        user = self.context['request'].user
+
+        if not user.is_authenticated:
+            return False
+        
+        favs = getattr(obj, 'my_favorites', None)
+
+        if favs is not None:
+            return bool(favs)
+        
+        return obj.favorited_by.filter(user=user).exists()
+
+
+class ProductDetailSerializer(ProductListSerializer):
+    country = serializers.CharField(source='country.name', read_only=True)
+    city = serializers.CharField(source='city.name', read_only=True)
+    images = ProductImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Product
+        fields = "__all__"
+
+
+class ProductCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = "__all__"
+
+    def validate(self, data):
+        if self.instance and 'status' in data:
+            old, new = self.instance.status, data['status']
+            if not (old == 3 and new == 4):
+                raise serializers.ValidationError(
+                    "Статус можно менять только из 'Опубликовано' (3) в 'Архив' (4)."
+                )
+        return data
+
+    def create(self, validated_data):
+        return Product.objects.create(**validated_data)

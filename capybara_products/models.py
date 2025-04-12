@@ -79,6 +79,7 @@ class Favorite(models.Model):
 class ProductView(models.Model):
     product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='views', verbose_name='Product')
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, verbose_name='User')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created at')
 
     class Meta:
         verbose_name = 'Product View'
