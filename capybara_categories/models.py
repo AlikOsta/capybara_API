@@ -23,5 +23,9 @@ class Category(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("category:category-detail", kwargs={"slug": self.slug})
+        return reverse('category-detail', kwargs={'slug': self.slug})
+    
+    def get_count_products(self):
+        products = self.products.filter(status=3)
+        return products.count()
     

@@ -1,10 +1,18 @@
-from django.urls import path
-from .views import CategoriesAPIView, CategoryDetailAPIView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import CategoryViewSet
 
 
-app_name = 'category'
+"""
+GET  /categories/v1/categories/
+
+GET  /categories/v1/categories/{slug}/
+"""
+
+router = DefaultRouter()
+router.register(r'categories', CategoryViewSet, basename='category')
+
 
 urlpatterns = [
-    path('api/v1/categories-list/', CategoriesAPIView.as_view(), name='categories_list'), #'categories/api/v1/categories-list/',
-    path('api/v1/category/<slug:slug>/', CategoryDetailAPIView.as_view(), name='category-detail'),
+    path('v1/', include(router.urls)),
 ]

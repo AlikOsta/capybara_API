@@ -1,35 +1,27 @@
 from rest_framework import serializers
+
 from .models import Category
+from capybara_products.models import Product
+from capybara_products.serializers import ProductListSerializer
 
-from capybara_products.serializers import ProductsSerializer
 
+class CategorySerializer(serializers.ModelSerializer):
 
-class CategoriesSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
-    url = serializers.SerializerMethodField()
+    url = serializers.HyperlinkedIdentityField(
+        view_name='category-detail',
+        lookup_field='slug'
+    )
 
-    class Meta:
-        model = Category
-        fields = ('id', 'name', 'image', 'url')
+    count = serializers.CharField(source='get_count_products', read_only=True)
 
-    def get_image(self, obj):
-        request = self.context.get('request')
-        if obj.image and request:
-            return request.build_absolute_uri(obj.image.url)
-        elif obj.image:
-            return obj.image.url
-        return None
-
-    def get_url(self, obj):
-        request = self.context.get('request')
-        if request:
-            return request.build_absolute_uri(obj.get_absolute_url())
-        return obj.get_absolute_url()
-    
-
-class CategoryDetailSerializer(serializers.ModelSerializer):
-    products = ProductsSerializer(many=True, read_only=True)
 
     class Meta:
         model = Category
-        fields = ['id', 'name', 'products']
+        fields = ['id', 'name', 'slug', 'image', 'url', 'count']
+
+
+class CategoryDetailSerializer(CategorySerializer):
+    products = ProductListSerializer(many=True, read_only=True)
+
+    class Meta(CategorySerializer.Meta):
+        fields = CategorySerializer.Meta.fields + ['products']
