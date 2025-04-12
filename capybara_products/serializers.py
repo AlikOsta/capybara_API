@@ -50,15 +50,9 @@ class ProductDetailSerializer(ProductListSerializer):
 class ProductCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = "__all__"
+        fields = ('category', 'title', 'description', 'country', 'city', 'price', 'currency')
 
     def validate(self, data):
-        if self.instance and 'status' in data:
-            old, new = self.instance.status, data['status']
-            if not (old == 3 and new == 4):
-                raise serializers.ValidationError(
-                    "Статус можно менять только из 'Опубликовано' (3) в 'Архив' (4)."
-                )
         return data
 
     def create(self, validated_data):

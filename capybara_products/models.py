@@ -11,10 +11,10 @@ class Product(models.Model):
     category =models.ForeignKey("capybara_categories.Category", on_delete=models.PROTECT, db_index=True, related_name="products", verbose_name="Category")
     title = models.CharField(max_length=50, db_index=True, verbose_name="Title")
     description = models.TextField(max_length = 350, verbose_name = "Description")
-    country = models.ForeignKey("capybara_countries.Country", null=True, on_delete=models.PROTECT, verbose_name="Country")
-    city = models.ForeignKey("capybara_countries.City", null=True, on_delete=models.PROTECT, db_index=True, verbose_name="City")
+    country = models.ForeignKey("capybara_countries.Country", on_delete=models.PROTECT, verbose_name="Country")
+    city = models.ForeignKey("capybara_countries.City", on_delete=models.PROTECT, db_index=True, verbose_name="City")
     price = models.IntegerField(verbose_name="Price")
-    currency = models.ForeignKey("capybara_currencies.Currency", null=True, on_delete=models.PROTECT, verbose_name="Currency")
+    currency = models.ForeignKey("capybara_currencies.Currency", on_delete=models.PROTECT, verbose_name="Currency")
     status = models.IntegerField(choices=STATUS_CHOICES, default=0, verbose_name="Status")
     create_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Date create")
     update_at = models.DateTimeField(auto_now=True, verbose_name="Date update")
@@ -44,9 +44,6 @@ class Product(models.Model):
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to="products/", verbose_name="Image")
-
-    def __str__(self) -> str:
-        return f"Image for {self.product.title} (main={self.is_main})"
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

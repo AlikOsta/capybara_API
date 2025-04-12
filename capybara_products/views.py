@@ -37,7 +37,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         if user.is_authenticated:
-
+            
             qs = qs.prefetch_related(
                 Prefetch(
                     'favorited_by',
@@ -45,7 +45,7 @@ class ProductViewSet(viewsets.ModelViewSet):
                     to_attr='my_favorites'
                 )
             )
-
+            # показываем все опубликованные + свои черновики и архивы
             return qs.filter(Q(status=3) | Q(author=user))
         # анонимным — только опубликованные
         return qs.filter(status=3)
