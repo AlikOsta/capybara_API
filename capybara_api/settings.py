@@ -124,3 +124,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png']
+
+MAX_IMAGE_SIZE = 5 * 1024 * 1024 

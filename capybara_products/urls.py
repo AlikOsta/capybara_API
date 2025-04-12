@@ -3,7 +3,8 @@ from django.conf.urls.static import static
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ProductViewSet
+
+from .views import ProductViewSet, FavoriteViewSet
 
 """
     GET    /products/v1/products/             — список (только status=3, + свои для авториз.)
@@ -21,6 +22,8 @@ from .views import ProductViewSet
 
 router = DefaultRouter()
 router.register(r'products', ProductViewSet, basename='product')
+router.register(r'favorites', FavoriteViewSet, basename='favorite')
+
 
 urlpatterns = [
     path('v1/', include(router.urls)),
