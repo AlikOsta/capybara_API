@@ -93,3 +93,21 @@ class ProductView(models.Model):
 
     def __str__(self) -> str:
         return f"{self.product.title} - {self.user.username}"
+
+
+class ProductComment(models.Model):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='comments', verbose_name='Product')
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, verbose_name='User')
+    text = models.TextField(verbose_name='Comment')
+    is_active = models.BooleanField(default=False, verbose_name='Is active')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created at')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Updated at')
+
+    class Meta:
+        verbose_name = 'Product Comment'
+        verbose_name_plural = 'Product Comments'
+        ordering = ['-created_at']
+        unique_together = ('product', 'user')
+
+    def __str__(self) -> str:
+        return f"{self.product.title} - {self.user.username}"
