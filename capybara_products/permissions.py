@@ -9,3 +9,17 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return obj.author == request.user
+
+
+class IsCommentAuthorOrReadOnly(permissions.BasePermission):
+    """
+    Разрешение, позволяющее только автору комментария редактировать или удалять его.
+    """
+    
+    def has_object_permission(self, request, view, obj):
+        # Разрешаем GET, HEAD, OPTIONS запросы всем
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        
+        # Разрешаем запросы на изменение только автору комментария
+        return obj.user == request.user

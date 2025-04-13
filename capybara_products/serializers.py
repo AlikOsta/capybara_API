@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from django.urls import reverse
-from .models import Product, ProductImage, Favorite
-
+from .models import Product, ProductImage, Favorite, ProductComment
 
 class ProductImageSerializer(serializers.ModelSerializer):
     """
@@ -42,6 +41,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     product_url = serializers.HyperlinkedIdentityField(
         view_name='product-detail', lookup_field='pk')
+    comments_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -65,6 +65,10 @@ class ProductListSerializer(serializers.ModelSerializer):
             return bool(favs)
         
         return obj.favorited_by.filter(user=user).exists()
+    
+    def get_comments_count(self, obj):
+        """Возвращает количество одобренных комментариев к продукту"""
+        return obj.comments.filter(status=3).count()
 
 
 class ProductDetailSerializer(ProductListSerializer):
@@ -83,10 +87,28 @@ class ProductDetailSerializer(ProductListSerializer):
     author_name = serializers.CharField(source='author.username', read_only=True)
     author_url = serializers.HyperlinkedRelatedField(
         view_name='user-detail', read_only=True, source='author')
+    comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = "__all__"
+
+    def get_comments(self, obj):
+        """
+        Возвращает одобренные комментарии к продукту.
+        Для автора продукта возвращает все комментарии.
+        """
+        request = self.context.get('request')
+        queryset = obj.comments.all()
+        
+        if request and request.user != obj.author:
+            queryset = queryset.filter(status=3)  
+            
+        return ProductCommentSerializer(
+            queryset, 
+            many=True, 
+            context=self.context
+        ).data
 
 
 class ProductCreateUpdateSerializer(serializers.ModelSerializer):
@@ -159,3 +181,64 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
             ProductImage.objects.create(product=product, image=img)
 
         return product
+
+
+class ProductCommentSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для комментариев к продуктам.
+    
+    Предоставляет информацию о комментариях:
+    - id: уникальный идентификатор комментария
+    - user: информация о пользователе, оставившем комментарий
+    - text: текст комментария
+    - created_at: дата создания комментария
+    - updated_at: дата обновления комментария
+    """
+    user = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ProductComment
+        fields = ['id', 'user', 'text', 'created_at', 'updated_at', 'status']
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at', 'status']
+    
+    def get_user(self, obj):
+        """Возвращает базовую информацию о пользователе"""
+        request = self.context.get('request')
+        user_url = reverse('user-detail', kwargs={'pk': obj.user.pk})
+        
+        if request:
+            user_url = request.build_absolute_uri(user_url)
+            
+        return {
+            'id': obj.user.id,
+            'username': obj.user.username,
+            'photo_url': obj.user.photo_url,
+            'user_url': user_url
+        }
+
+
+class ProductCommentCreateUpdateSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания и обновления комментариев к продуктам.
+    
+    Позволяет создавать и обновлять комментарии с указанием:
+    - text: текст комментария
+    """
+    class Meta:
+        model = ProductComment
+        fields = ['text']
+        
+    def validate(self, data):
+        """
+        Проверяет, что пользователь не пытается создать второй комментарий к тому же продукту.
+        """
+        request = self.context.get('request')
+        product_id = self.context.get('product_id')
+        
+        if self.instance is None:
+            if ProductComment.objects.filter(user=request.user, product_id=product_id).exists():
+                raise serializers.ValidationError(
+                    "You have already commented on this product. Please update your existing comment."
+                )
+        
+        return data
