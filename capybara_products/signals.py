@@ -10,7 +10,7 @@ def product_post_save(sender, instance, created, **kwargs):
         goods_text = f"{instance.title}\n{instance.description}"
         
         if moderate_goods(goods_text):
-            instance.status = 1
+            instance.status = 3 
         else:
             instance.status = 2
             
@@ -18,13 +18,14 @@ def product_post_save(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=ProductComment)
-def product_post_save(sender, instance, created, **kwargs):
-    if created or instance.is_active == False:
-        goods_text = f"{instance.text}"
+def comment_post_save(sender, instance, created, **kwargs):
+    if created or instance.status == 0:
+
+        comment_text = instance.text
         
-        if moderate_goods(goods_text):
-            instance.is_active == True
+        if moderate_goods(comment_text):
+            instance.status = 3 
         else:
-            instance.is_active == False
+            instance.status = 2 
             
-        type(instance).objects.filter(pk=instance.pk)
+        type(instance).objects.filter(pk=instance.pk).update(status=instance.status)

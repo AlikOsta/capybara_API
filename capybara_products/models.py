@@ -100,7 +100,7 @@ class ProductComment(models.Model):
     product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='comments', verbose_name='Product')
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, verbose_name='User')
     text = models.TextField(max_length=500, verbose_name='Comment')
-    is_active = models.BooleanField(default=False, verbose_name='Is active')
+    status = models.IntegerField(choices=STATUS_CHOICES, default=0, verbose_name="Status")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created at')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Updated at')
 
