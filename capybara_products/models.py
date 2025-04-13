@@ -16,6 +16,7 @@ class Product(models.Model):
     price = models.IntegerField(verbose_name="Price")
     currency = models.ForeignKey("capybara_currencies.Currency", on_delete=models.PROTECT, verbose_name="Currency")
     status = models.IntegerField(choices=STATUS_CHOICES, default=0, verbose_name="Status")
+    is_premium = models.BooleanField(default=False, verbose_name="Is premium")
     create_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Date create")
     update_at = models.DateTimeField(auto_now=True, verbose_name="Date update")
 
@@ -111,3 +112,30 @@ class ProductComment(models.Model):
 
     def __str__(self) -> str:
         return f"{self.product.title} - {self.user.username}"
+    
+
+class PremiumPlan(models.Model):
+    name = models.CharField(max_length=30, verbose_name="Name")
+    duration_days = models.IntegerField(verbose_name="Duration (days)")
+    price = models.ImageField(default=0, verbose_name="Price")
+    description = models.TextField(verbose_name="Description")
+    is_active = models.BooleanField(default=False, verbose_name="Is active")
+
+    class Meta:
+        verbose_name = "Premium plan"
+        verbose_name_plural = "Premium plans"
+        ordering = ["-id"]
+
+
+class ProductPremium(models.Model):
+    product = models.OneToOneField('Product', on_delete=models.CASCADE, related_name='premium_product', verbose_name='Product')
+    plan = models.ForeignKey('PremiumPlan', on_delete=models.CASCADE, verbose_name='Premium plan')
+    start_date = models.DateTimeField(verbose_name='Start date')
+    end_date = models.DateTimeField(verbose_name='End date')
+    is_active = models.BooleanField(default=False, verbose_name='Is active')
+    payment_id = models.CharField(max_length=100, verbose_name='Payment ID')
+
+    class Meta:
+        verbose_name = "Product premium"
+        verbose_name_plural = "Product premiums"
+        ordering = ["-id"]
