@@ -99,7 +99,7 @@ class ProductView(models.Model):
 class ProductComment(models.Model):
     product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='comments', verbose_name='Product')
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, verbose_name='User')
-    text = models.TextField(verbose_name='Comment')
+    text = models.TextField(max_length=500, verbose_name='Comment')
     is_active = models.BooleanField(default=False, verbose_name='Is active')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created at')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Updated at')
@@ -108,10 +108,15 @@ class ProductComment(models.Model):
         verbose_name = 'Product Comment'
         verbose_name_plural = 'Product Comments'
         ordering = ['-created_at']
-        unique_together = ('product', 'user')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'product'], 
+                name='unique_user_product_comment'
+            )
+        ]
 
-    def __str__(self) -> str:
-        return f"{self.product.title} - {self.user.username}"
+    def __str__(self):
+        return f'Comment by {self.user.username} on {self.product.title}'
     
 
 class PremiumPlan(models.Model):
