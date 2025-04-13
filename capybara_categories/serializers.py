@@ -1,11 +1,21 @@
 from rest_framework import serializers
-
 from .models import Category
 from capybara_products.models import Product
 from capybara_products.serializers import ProductListSerializer
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для списка категорий.
+    
+    Предоставляет базовую информацию о категориях, включая:
+    - id: уникальный идентификатор категории
+    - name: название категории
+    - slug: URL-совместимый идентификатор категории
+    - image: изображение категории
+    - url: ссылка на детальное представление категории
+    - count: количество опубликованных продуктов в категории
+    """
 
     url = serializers.HyperlinkedIdentityField(
         view_name='category-detail',
@@ -21,6 +31,16 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CategoryDetailSerializer(CategorySerializer):
+    """
+    Сериализатор для детального представления категории.
+    
+    Расширяет базовый CategorySerializer, добавляя список продуктов,
+    относящихся к данной категории. Включает только опубликованные продукты.
+    
+    Дополнительные поля:
+    - products: список продуктов в категории, представленных через ProductListSerializer
+    """
+    
     products = ProductListSerializer(many=True, read_only=True)
 
     class Meta(CategorySerializer.Meta):

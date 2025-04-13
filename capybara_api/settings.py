@@ -23,13 +23,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'api',
     'capybara_tg_user',
     'capybara_tg_bot',
     'capybara_products',
     'capybara_categories',
     'capybara_countries',
     'capybara_currencies',
+    'drf_yasg',
     
 ]
 
