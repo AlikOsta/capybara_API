@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
+
 
 from .choices import STATUS_CHOICES
 from .utils_img import process_image
@@ -19,6 +21,7 @@ class Product(models.Model):
     is_premium = models.BooleanField(default=False, verbose_name="Is premium")
     create_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Date create")
     update_at = models.DateTimeField(auto_now=True, verbose_name="Date update")
+    # end_date = models.DateTimeField(verbose_name='End date')
 
     class Meta:
         verbose_name = "Product"
@@ -39,10 +42,19 @@ class Product(models.Model):
     
     @property
     def main_image(self):
+        """Возвращает первое изображение из списка"""
         first_image = self.images.first()
         if first_image:
             return first_image.image
         return None
+    
+    @property
+    def premium_info(self):
+        """Возвращает информацию о премиум-статусе, если он есть"""
+        try:
+            return self.premium
+        except:
+            return None
     
 
 class ProductImage(models.Model):
@@ -131,16 +143,32 @@ class PremiumPlan(models.Model):
         verbose_name_plural = "Premium plans"
         ordering = ["-id"]
 
+    def __str__(self):
+        return f"{self.name} ({self.duration_days} дней, {self.price})"
+    
 
 class ProductPremium(models.Model):
-    product = models.OneToOneField('Product', on_delete=models.CASCADE, related_name='premium_product', verbose_name='Product')
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='premium_product', verbose_name='Product')
     plan = models.ForeignKey('PremiumPlan', on_delete=models.CASCADE, verbose_name='Premium plan')
-    start_date = models.DateTimeField(verbose_name='Start date')
+    start_date = models.DateTimeField(default=timezone.now, verbose_name='Start date')
     end_date = models.DateTimeField(verbose_name='End date')
     is_active = models.BooleanField(default=False, verbose_name='Is active')
-    payment_id = models.CharField(max_length=100, verbose_name='Payment ID')
+    payment_id = models.CharField(max_length=100, null=True, blank=True, verbose_name='Payment ID')
 
     class Meta:
         verbose_name = "Product premium"
         verbose_name_plural = "Product premiums"
-        ordering = ["-id"]
+        ordering = ["-end_date"]
+
+    def __str__(self):
+        return f"Премиум для {self.product.title} до {self.end_date.strftime('%d.%m.%Y')}"
+    
+    def save(self, *args, **kwargs):
+
+        if not self.end_date:
+            self.end_date = self.start_date + timezone.timedelta(days=self.plan.duration_days)
+
+        if self.end_date <= timezone.now():
+            self.is_active = False
+        
+        super().save(*args, **kwargs)

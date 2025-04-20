@@ -24,7 +24,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
     count = serializers.CharField(source='get_count_products', read_only=True)
 
-
     class Meta:
         model = Category
         fields = ['id', 'name', 'slug', 'image', 'url', 'count']

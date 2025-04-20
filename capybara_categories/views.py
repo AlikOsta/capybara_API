@@ -30,17 +30,6 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
         )
     )
 
-    @swagger_auto_schema(
-        operation_summary="Получить список категорий",
-        operation_description="Возвращает список всех категорий с базовой информацией",
-        responses={
-            200: openapi.Response(
-                description="Успешный ответ",
-                schema=CategorySerializer(many=True)
-            ),
-        },
-        tags=['Categories']
-    )
     def list(self, request, *args, **kwargs):
         """
         Получить список всех категорий.
@@ -50,27 +39,6 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
         """
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Получить детальную информацию о категории",
-        operation_description="Возвращает детальную информацию о категории и список продуктов в ней",
-        manual_parameters=[
-            openapi.Parameter(
-                name='slug',
-                in_=openapi.IN_PATH,
-                description='Уникальный идентификатор категории (slug)',
-                type=openapi.TYPE_STRING,
-                required=True
-            )
-        ],
-        responses={
-            200: openapi.Response(
-                description="Успешный ответ",
-                schema=CategoryDetailSerializer()
-            ),
-            404: "Категория не найдена"
-        },
-        tags=['Categories']
-    )
     def retrieve(self, request, *args, **kwargs):
         """
         Получить детальную информацию о категории по её slug.

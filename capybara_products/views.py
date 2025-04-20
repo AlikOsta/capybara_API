@@ -1,3 +1,5 @@
+
+from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, mixins
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -7,19 +9,20 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q, Prefetch
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
-from .models import Product, ProductView, Favorite, ProductComment
+from .models import Product, ProductView, Favorite, ProductComment, PremiumPlan, ProductPremium
 from .serializers import (
     ProductListSerializer, 
     ProductDetailSerializer, 
     ProductCreateUpdateSerializer,
     ProductCommentCreateUpdateSerializer,
     ProductCommentSerializer,
+    PremiumPlanSerializer, 
+    ProductPremiumSerializer, 
+    ProductPremiumCreateSerializer   
 )
 from .permissions import IsAuthorOrReadOnly, IsCommentAuthorOrReadOnly
 from .filters import ProductFilterSet
+
 
 class ProductQuerySetMixin:
     """Миксин для общей логики формирования QuerySet продуктов"""
@@ -61,232 +64,6 @@ class ProductViewSet(ProductQuerySetMixin, viewsets.ModelViewSet):
     ordering_fields = ['create_at', 'price', 'views_count', 'favorites_count']
     ordering = ['-create_at']
 
-    @swagger_auto_schema(
-        operation_summary="Получить комментарии к продукту",
-        operation_description="Возвращает список комментариев к продукту в детальном представлении продукта",
-        responses={
-            200: ProductDetailSerializer(),
-            404: "Продукт не найден"
-        },
-        tags=['Products']
-    )
-    def retrieve(self, request, *args, **kwargs):
-        """
-        Получить детальную информацию о продукте.
-        
-        Возвращает полную информацию о продукте, включая данные о стране, городе, авторе и комментариях.
-        Если пользователь авторизован, при просмотре продукта создается запись о просмотре.
-        """
-        instance = self.get_object()
-        if request.user.is_authenticated:
-            ProductView.objects.get_or_create(product=instance, user=request.user)
-        return super().retrieve(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        operation_summary="Получить список продуктов",
-        operation_description="Возвращает список продуктов с возможностью фильтрации, поиска и сортировки",
-        manual_parameters=[
-            openapi.Parameter(
-                'search', openapi.IN_QUERY,
-                description="Поиск по названию и описанию",
-                type=openapi.TYPE_STRING
-            ),
-            openapi.Parameter(
-                'ordering', openapi.IN_QUERY,
-                description="Сортировка: create_at, -create_at, price, -price, views_count, favorites_count",
-                type=openapi.TYPE_STRING
-            ),
-            openapi.Parameter(
-                'category', openapi.IN_QUERY,
-                description="Фильтр по ID категории",
-                type=openapi.TYPE_INTEGER
-            ),
-            openapi.Parameter(
-                'country', openapi.IN_QUERY,
-                description="Фильтр по ID страны (работает только если указана категория)",
-                type=openapi.TYPE_INTEGER
-            ),
-            openapi.Parameter(
-                'city', openapi.IN_QUERY,
-                description="Фильтр по ID города (работает только если указана категория)",
-                type=openapi.TYPE_INTEGER
-            ),
-            openapi.Parameter(
-                'currency', openapi.IN_QUERY,
-                description="Фильтр по ID валюты (работает только если указана категория)",
-                type=openapi.TYPE_INTEGER
-            ),
-        ],
-        responses={
-            200: openapi.Response(
-                description="Успешный ответ",
-                schema=ProductListSerializer(many=True)
-            ),
-        },
-        tags=['Products']
-    )
-    def list(self, request, *args, **kwargs):
-        """
-        Получить список продуктов.
-        
-        Для неавторизованных пользователей возвращает только опубликованные продукты (status=3).
-        Для авторизованных пользователей также включает их собственные продукты независимо от статуса.
-        
-        Поддерживает:
-        - Поиск по названию и описанию
-        - Сортировку по дате создания, цене, количеству просмотров и избранных
-        - Фильтрацию по категории, стране, городу и валюте (фильтры кроме категории работают только если указана категория)
-        """
-        return super().list(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        operation_summary="Создать новый продукт",
-        operation_description="Создает новый продукт. Требуется авторизация.",
-        request_body=ProductCreateUpdateSerializer,
-        responses={
-            201: openapi.Response(
-                description="Продукт успешно создан",
-                schema=ProductDetailSerializer()
-            ),
-            400: "Неверные данные",
-            401: "Не авторизован"
-        },
-        tags=['Products']
-    )
-    def create(self, request, *args, **kwargs):
-        """
-        Создать новый продукт.
-        
-        Требуется авторизация. Текущий пользователь автоматически устанавливается как автор продукта.
-        Поддерживает загрузку одного изображения.
-        """
-        return super().create(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        operation_summary="Получить детальную информацию о продукте",
-        operation_description="Возвращает детальную информацию о продукте по его ID. При просмотре авторизованным пользователем сохраняется запись о просмотре.",
-        manual_parameters=[
-            openapi.Parameter(
-                'pk', openapi.IN_PATH,
-                description="ID продукта",
-                type=openapi.TYPE_INTEGER,
-                required=True
-            ),
-        ],
-        responses={
-            200: openapi.Response(
-                description="Успешный ответ",
-                schema=ProductDetailSerializer()
-            ),
-            404: "Продукт не найден"
-        },
-        tags=['Products']
-    )
-    def retrieve(self, request, *args, **kwargs):
-        """
-        Получить детальную информацию о продукте.
-        
-        Возвращает полную информацию о продукте, включая данные о стране, городе, авторе и т.д.
-        Если пользователь авторизован, при просмотре продукта создается запись о просмотре.
-        """
-        instance = self.get_object()
-        if request.user.is_authenticated:
-            ProductView.objects.get_or_create(product=instance, user=request.user)
-        return super().retrieve(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        operation_summary="Обновить продукт (полное обновление)",
-        operation_description="Полностью обновляет продукт. Доступно только автору продукта.",
-        manual_parameters=[
-            openapi.Parameter(
-                'pk', openapi.IN_PATH,
-                description="ID продукта",
-                type=openapi.TYPE_INTEGER,
-                required=True
-            ),
-        ],
-        request_body=ProductCreateUpdateSerializer,
-        responses={
-            200: openapi.Response(
-                description="Продукт успешно обновлен",
-                schema=ProductDetailSerializer()
-            ),
-            400: "Неверные данные",
-            401: "Не авторизован",
-            403: "Доступ запрещен",
-            404: "Продукт не найден"
-        },
-        tags=['Products']
-    )
-    def update(self, request, *args, **kwargs):
-        """
-        Обновить продукт (полное обновление).
-        
-        Требуется авторизация. Доступно только автору продукта.
-        Все поля должны быть предоставлены в запросе.
-        """
-        return super().update(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        operation_summary="Обновить продукт (частичное обновление)",
-        operation_description="Частично обновляет продукт. Доступно только автору продукта.",
-        manual_parameters=[
-            openapi.Parameter(
-                'pk', openapi.IN_PATH,
-                description="ID продукта",
-                type=openapi.TYPE_INTEGER,
-                required=True
-            ),
-        ],
-        request_body=ProductCreateUpdateSerializer,
-        responses={
-            200: openapi.Response(
-                description="Продукт успешно обновлен",
-                schema=ProductDetailSerializer()
-            ),
-            400: "Неверные данные",
-            401: "Не авторизован",
-            403: "Доступ запрещен",
-            404: "Продукт не найден"
-        },
-        tags=['Products']
-    )
-    def partial_update(self, request, *args, **kwargs):
-        """
-        Обновить продукт (частичное обновление).
-        
-        Требуется авторизация. Доступно только автору продукта.
-        Можно предоставить только те поля, которые нужно обновить.
-        """
-        return super().partial_update(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        operation_summary="Удалить продукт",
-        operation_description="Удаляет продукт. Доступно только автору продукта.",
-        manual_parameters=[
-            openapi.Parameter(
-                'pk', openapi.IN_PATH,
-                description="ID продукта",
-                type=openapi.TYPE_INTEGER,
-                required=True
-            ),
-        ],
-        responses={
-            204: "Продукт успешно удален",
-            401: "Не авторизован",
-            403: "Доступ запрещен",
-            404: "Продукт не найден"
-        },
-        tags=['Products']
-    )
-    def destroy(self, request, *args, **kwargs):
-        """
-        Удалить продукт.
-        
-        Требуется авторизация. Доступно только автору продукта.
-        """
-        return super().destroy(request, *args, **kwargs)
-
     def get_filter_backends(self):
         backends = [SearchFilter]
         if 'category' in self.request.query_params:
@@ -319,88 +96,12 @@ class FavoriteViewSet(ProductQuerySetMixin, mixins.ListModelMixin, viewsets.Gene
     permission_classes = [IsAuthenticated]
     serializer_class = ProductListSerializer
     
-    @swagger_auto_schema(
-        operation_summary="Получить список избранных продуктов",
-        operation_description="Возвращает список продуктов, добавленных в избранное текущим пользователем",
-        responses={
-            200: openapi.Response(
-                description="Успешный ответ",
-                schema=ProductListSerializer(many=True)
-            ),
-            401: "Не авторизован"
-        },
-        tags=['Favorites']
-    )
-    def list(self, request, *args, **kwargs):
-        """
-        Получить список избранных продуктов.
-        
-        Требуется авторизация. Возвращает список продуктов, добавленных в избранное текущим пользователем.
-        """
-        return super().list(request, *args, **kwargs)
     
     def get_queryset(self):
         user = self.request.user
         queryset = self.get_base_queryset().filter(favorited_by__user=user)
         return self.add_favorites_prefetch(queryset, user)
     
-    # Важно: декораторы swagger_auto_schema должны быть ПЕРЕД декоратором action
-    @swagger_auto_schema(
-        method='post',
-        operation_summary="Добавить продукт в избранное",
-        operation_description="Добавляет продукт в избранное текущего пользователя",
-        manual_parameters=[
-            openapi.Parameter(
-                'pk', openapi.IN_PATH,
-                description="ID продукта",
-                type=openapi.TYPE_INTEGER,
-                required=True
-            ),
-        ],
-        responses={
-            200: openapi.Response(
-                description="Успешный ответ",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'is_favorited': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Добавлен ли продукт в избранное'),
-                        'favorites_count': openapi.Schema(type=openapi.TYPE_INTEGER, description='Общее количество добавлений продукта в избранное')
-                    }
-                )
-            ),
-            401: "Не авторизован",
-            404: "Продукт не найден"
-        },
-        tags=['Favorites']
-    )
-    @swagger_auto_schema(
-        method='delete',
-        operation_summary="Удалить продукт из избранного",
-        operation_description="Удаляет продукт из избранного текущего пользователя",
-        manual_parameters=[
-            openapi.Parameter(
-                'pk', openapi.IN_PATH,
-                description="ID продукта",
-                type=openapi.TYPE_INTEGER,
-                required=True
-            ),
-        ],
-        responses={
-            200: openapi.Response(
-                description="Успешный ответ",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'is_favorited': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Добавлен ли продукт в избранное'),
-                        'favorites_count': openapi.Schema(type=openapi.TYPE_INTEGER, description='Общее количество добавлений продукта в избранное')
-                    }
-                )
-            ),
-            401: "Не авторизован",
-            404: "Продукт не найден"
-        },
-        tags=['Favorites']
-    )
     @action(detail=True, methods=['post', 'delete'])
     def toggle(self, request, pk=None):
         """
@@ -463,20 +164,14 @@ class ProductCommentViewSet(viewsets.ModelViewSet):
         Для обычных пользователей возвращает только одобренные комментарии.
         Для автора продукта возвращает все комментарии.
         """
-        # Проверяем, является ли это фейковым запросом от Swagger
-        if getattr(self, 'swagger_fake_view', False):
-            # Возвращаем пустой QuerySet для Swagger
-            return ProductComment.objects.none()
         
         product_id = self.kwargs.get('product_pk')
         queryset = ProductComment.objects.filter(product_id=product_id)
         
-        # Получаем продукт
         product = get_object_or_404(Product, pk=product_id)
         
-        # Если пользователь не автор продукта, показываем только одобренные комментарии
         if self.request.user != product.author:
-            queryset = queryset.filter(status=3)  # Только одобренные
+            queryset = queryset.filter(status=3)
         
         return queryset.select_related('user')
     
@@ -503,15 +198,6 @@ class ProductCommentViewSet(viewsets.ModelViewSet):
         product_id = self.kwargs.get('product_pk')
         serializer.save(user=self.request.user, product_id=product_id)
     
-    @swagger_auto_schema(
-        operation_summary="Получить список комментариев к продукту",
-        operation_description="Возвращает список комментариев к конкретному продукту",
-        responses={
-            200: ProductCommentSerializer(many=True),
-            404: "Продукт не найден"
-        },
-        tags=['Comments']
-    )
     def list(self, request, *args, **kwargs):
         """
         Получить список комментариев к продукту.
@@ -521,18 +207,6 @@ class ProductCommentViewSet(viewsets.ModelViewSet):
         """
         return super().list(request, *args, **kwargs)
     
-    @swagger_auto_schema(
-        operation_summary="Создать комментарий к продукту",
-        operation_description="Создает новый комментарий к продукту. Один пользователь может оставить только один комментарий к одному продукту.",
-        request_body=ProductCommentCreateUpdateSerializer,
-        responses={
-            201: ProductCommentSerializer(),
-            400: "Неверные данные или у вас уже есть комментарий к этому продукту",
-            401: "Не авторизован",
-            404: "Продукт не найден"
-        },
-        tags=['Comments']
-    )
     def create(self, request, *args, **kwargs):
         """
         Создать комментарий к продукту.
@@ -542,34 +216,12 @@ class ProductCommentViewSet(viewsets.ModelViewSet):
         """
         return super().create(request, *args, **kwargs)
     
-    @swagger_auto_schema(
-        operation_summary="Получить комментарий",
-        operation_description="Возвращает детальную информацию о конкретном комментарии",
-        responses={
-            200: ProductCommentSerializer(),
-            404: "Комментарий не найден"
-        },
-        tags=['Comments']
-    )
     def retrieve(self, request, *args, **kwargs):
         """
         Получить детальную информацию о комментарии.
         """
         return super().retrieve(request, *args, **kwargs)
     
-    @swagger_auto_schema(
-        operation_summary="Обновить комментарий (полное обновление)",
-        operation_description="Полностью обновляет комментарий. Доступно только автору комментария.",
-        request_body=ProductCommentCreateUpdateSerializer,
-        responses={
-            200: ProductCommentSerializer(),
-            400: "Неверные данные",
-            401: "Не авторизован",
-            403: "Доступ запрещен",
-            404: "Комментарий не найден"
-        },
-        tags=['Comments']
-    )
     def update(self, request, *args, **kwargs):
         """
         Обновить комментарий (полное обновление).
@@ -579,19 +231,6 @@ class ProductCommentViewSet(viewsets.ModelViewSet):
         """
         return super().update(request, *args, **kwargs)
     
-    @swagger_auto_schema(
-        operation_summary="Обновить комментарий (частичное обновление)",
-        operation_description="Частично обновляет комментарий. Доступно только автору комментария.",
-        request_body=ProductCommentCreateUpdateSerializer,
-        responses={
-            200: ProductCommentSerializer(),
-            400: "Неверные данные",
-            401: "Не авторизован",
-            403: "Доступ запрещен",
-            404: "Комментарий не найден"
-        },
-        tags=['Comments']
-    )
     def partial_update(self, request, *args, **kwargs):
         """
         Обновить комментарий (частичное обновление).
@@ -601,17 +240,6 @@ class ProductCommentViewSet(viewsets.ModelViewSet):
         """
         return super().partial_update(request, *args, **kwargs)
     
-    @swagger_auto_schema(
-        operation_summary="Удалить комментарий",
-        operation_description="Удаляет комментарий. Доступно только автору комментария.",
-        responses={
-            204: "Комментарий успешно удален",
-            401: "Не авторизован",
-            403: "Доступ запрещен",
-            404: "Комментарий не найден"
-        },
-        tags=['Comments']
-    )
     def destroy(self, request, *args, **kwargs):
         """
         Удалить комментарий.
@@ -619,3 +247,94 @@ class ProductCommentViewSet(viewsets.ModelViewSet):
         Требуется авторизация. Доступно только автору комментария.
         """
         return super().destroy(request, *args, **kwargs)
+    
+
+# class PremiumPlanViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    API для работы с планами премиум-объявлений.
+    
+    Предоставляет возможность получать список доступных планов.
+    """
+
+    queryset = PremiumPlan.objects.filter(is_active=True)
+    serializer_class = PremiumPlanSerializer
+    ptrmission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        """
+        Получить список доступных премиум-планов.
+        
+        Требуется авторизация. Возвращает только активные планы.
+        """
+        return super().list(request, *args, **kwargs)
+ 
+
+# class ProductPremiumViewSet(viewsets.ViewSet):
+    """
+    API для работы с премиум-статусом продуктов.
+    
+    Предоставляет возможность активировать, получать информацию и отменять премиум-статус для продуктов.
+    """
+    permission_classes = [IsAuthenticated, IsAuthenticatedOrReadOnly]
+
+    def get_product(self, pk):
+        """Получает продукт по ID и проверяет права доступа"""
+        product = get_object_or_404(Product, pk=pk)
+        self.check_object_permissions(self.request, product)
+        return product
+
+    def retrieve(self, request, pk=None):
+        """
+        Получить информацию о премиум-статусе продукта.
+        
+        Возвращает детальную информацию о премиум-статусе продукта, включая выбранный план,
+        даты начала и окончания, а также количество оставшихся дней.
+        """
+        product = self.get_product(pk)
+        try:
+            premium = ProductPremium.objects.get(product=product)
+            serialaizer = ProductPremiumSerializer(premium)
+            return Response(serialaizer.data)
+        except ProductPremium.DoesNotExist:
+                return Response({"detail": "У этого продукта нет премиум-статуса"}, status=status.HTTP_404_NOT_FOUND)
+
+    def create(self, request, pk=None):
+        """
+        Активировать премиум-статус для продукта.
+
+        Требуется авторизация. Активирует премиум-статус для продукта на основе выбранного плана.
+        """
+        product = self.get_product(pk)
+
+        serializer = ProductPremiumCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        plan = get_object_or_404(PremiumPlan, pk=serializer.validated_data['plan_id'])
+
+        try:
+            premium = ProductPremium.objects.get(product=product)
+            premium.plan = plan
+            premium.start_date = timezone.now()
+            premium.end_date = premium.start_date + timezone.timedelta(days=plan.duration_days)
+            premium.is_active = True
+            premium.save()
+        except ProductPremium.DoesNotExist:
+            premium = ProductPremium.objects.create(
+                product=product,
+                plan=plan,
+                start_date=timezone.now(),
+                end_date=timezone.now() + timezone.timedelta(days=plan.duration_days),
+                is_active=True
+            )
+
+        product.is_premium = True
+        product.save()
+
+        serializer = ProductPremiumSerializer(premium)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+    
+
+            
+

@@ -10,9 +10,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = os.getenv('DEBUG')
+DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django_cleanup.apps.CleanupConfig',
@@ -128,3 +128,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png']
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024 
+
+# REST_FRAMEWORK = {
+#         'DEFAULT_RENDERER_CLASSES': [
+#             "rest_framework.renderers.JSONRenderer",
+#         ]
+# }
+

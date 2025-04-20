@@ -14,9 +14,9 @@ router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 
 ratings_router = routers.NestedSimpleRouter(router, r'users', lookup='user')
-ratings_router.register(r'ratings', UserRatingViewSet, basename='user-rating')
+# ratings_router.register(r'ratings', UserRatingViewSet, basename='user-rating')
 
 urlpatterns = [
     path('v1/', include(router.urls)),
-    path('v1/', include(ratings_router.urls)),
+    # path('v1/', include(ratings_router.urls)),
 ]

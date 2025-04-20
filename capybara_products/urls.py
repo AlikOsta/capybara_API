@@ -23,13 +23,13 @@ from .views import ProductViewSet, FavoriteViewSet, ProductCommentViewSet
 
 router = DefaultRouter()
 router.register(r'products', ProductViewSet, basename='product')
-router.register(r'favorites', FavoriteViewSet, basename='favorite')
+# router.register(r'favorites', FavoriteViewSet, basename='favorite')
 
 comments_router = routers.NestedSimpleRouter(router, r'products', lookup='product')
-comments_router.register(r'comments', ProductCommentViewSet, basename='product-comment')
+# comments_router.register(r'comments', ProductCommentViewSet, basename='product-comment')
 
 
 urlpatterns = [
     path('v1/', include(router.urls)),
-    path('v1/', include(comments_router.urls)),
+    # path('v1/', include(comments_router.urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
