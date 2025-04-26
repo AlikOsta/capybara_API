@@ -23,6 +23,14 @@ class CategorySerializer(serializers.ModelSerializer):
     )
 
     count = serializers.CharField(source='get_count_products', read_only=True)
+    
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, obj):
+        if obj.image:
+            # Исправляем путь, удаляя лишнее "media/"
+            return obj.image.url.replace('/media/media/', '/media/')
+        return None
 
     class Meta:
         model = Category

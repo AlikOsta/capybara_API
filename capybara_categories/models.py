@@ -7,7 +7,7 @@ class Category(models.Model):
     name = models.CharField(max_length=50, unique=True, verbose_name="Catogory")
     order = models.SmallIntegerField(default=0, db_index=True, verbose_name="Order")
     slug = models.SlugField(max_length=50, unique=True, verbose_name="Slug")
-    image = models.ImageField(upload_to='media/images/cat_img/', blank=True, null=True, verbose_name="Image")
+    image = models.ImageField(upload_to='images/cat_img/')
 
     class Meta:
         verbose_name = "Category"

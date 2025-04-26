@@ -40,6 +40,9 @@ class ProductListSerializer(serializers.ModelSerializer):
     """
     category = serializers.CharField(source='category.name', read_only=True)
     currency = serializers.CharField(source='currency.code', read_only=True)
+    city = serializers.CharField(source='city.name', read_only=True)
+    country = serializers.CharField(source='country.name', read_only=True)
+    author = serializers.CharField(source='author.username', read_only=True)
     main_image = serializers.ImageField(read_only=True)
     views_count = serializers.IntegerField(read_only=True)
     favorites_count = serializers.IntegerField(read_only=True)
