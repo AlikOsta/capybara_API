@@ -9,6 +9,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 class TelegramUser(AbstractUser):
     telegram_id = models.BigIntegerField(unique=True, verbose_name='Telegram ID')
     photo_url = models.URLField(blank=True, null=True, verbose_name='Photo URL')
+    language =  models.CharField(max_length=5, default='en', verbose_name='Language')
     country = models.ForeignKey('capybara_countries.Country', on_delete=models.PROTECT, verbose_name='Country', null=True, blank=True)
     city = models.ForeignKey('capybara_countries.City', on_delete=models.PROTECT, verbose_name='City', null=True, blank=True)
     average_rating = models.FloatField(default=0, verbose_name='Average Rating')

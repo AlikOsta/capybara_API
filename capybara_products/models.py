@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 
-
 from .choices import STATUS_CHOICES
 from .utils_img import process_image
 
@@ -12,7 +11,7 @@ class Product(models.Model):
     author = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, verbose_name="Author")
     category =models.ForeignKey("capybara_categories.Category", on_delete=models.PROTECT, db_index=True, related_name="products", verbose_name="Category")
     title = models.CharField(max_length=50, db_index=True, verbose_name="Title")
-    description = models.TextField(max_length = 350, verbose_name = "Description")
+    description = models.TextField(max_length = 550, verbose_name = "Description")
     country = models.ForeignKey("capybara_countries.Country", on_delete=models.PROTECT, verbose_name="Country")
     city = models.ForeignKey("capybara_countries.City", on_delete=models.PROTECT, db_index=True, verbose_name="City")
     price = models.IntegerField(verbose_name="Price")
@@ -52,7 +51,7 @@ class Product(models.Model):
     def premium_info(self):
         """Возвращает информацию о премиум-статусе, если он есть"""
         try:
-            return self.premium
+            return self.is_premium
         except:
             return None
     
