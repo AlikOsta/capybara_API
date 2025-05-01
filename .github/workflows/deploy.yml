@@ -61,5 +61,6 @@ jobs:
 
             # Сбор статики 
             python manage.py collectstatic --noinput
+            
             # Перезапускаем systemd сервис gunicorn а он автоматически перезапустит сайт
-            echo "${{ secrets.PASSWORD }}" | sudo -S systemctl restart capybara_api
+            echo "${{ secrets.PASSWORD }}" | sudo -S systemctl restart gunicorn

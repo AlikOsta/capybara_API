@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     '217.114.2.208', 
@@ -132,19 +132,25 @@ SAPPORT_URL = os.getenv("SAPPORT_URL")
 
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY") 
 
-STATIC_URL = '/static/'
-
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+
+STATIC_ROOT = '/home/al/capybara_API/static'
 
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = '/home/al/capybara_API/media'
 
-ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png']
+ALLOWED_IMAGE_TYPES = [
+    'image/jpeg',               
+    'image/png',                
+    'image/webp',                
+    'image/svg+xml',             
+]
+
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024 
 
