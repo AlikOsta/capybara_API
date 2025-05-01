@@ -12,7 +12,17 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['217.114.2.208', '127.0.0.1', 'localhost', 'capybarashop.store', 'capybarashop.ru']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://capybarashop.store',
+    'https://capybarashop.ru', 
+    'https://217.114.2.208', 
+    'http://217.114.2.208',
+    'https://127.0.0.1',
+    'https://localhost',
+    'http://localhost',
+    'http://127.0.0.1',]
 
 INSTALLED_APPS = [
     'corsheaders',
