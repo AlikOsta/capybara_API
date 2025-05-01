@@ -1,0 +1,65 @@
+# Название нашего workflow для отображения в интерфейсе GitHub
+name: Deploy to VPS
+
+# Указываем когда запускать - при push в main ветку
+on:
+  push:
+    branches: [ main ]
+
+# Определяем задачи для выполнения
+jobs:
+  # Задача №1 - деплой на сервер
+  deploy:
+    # Указываем на какой ОС запускать
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Получаем код из репозитория
+      - uses: actions/checkout@v3
+
+      # Деплоим на сервер через SSH
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          # Используем секреты из GitHub для подключения
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          
+          # Команды выполняемые на сервере
+          script: |
+            # Переходим в директорию проекта
+            cd /home/al/capybara_API
+            
+            # Обновляем код из репозитория (с sudo и передачей пароля)
+            echo "${{ secrets.PASSWORD }}" | sudo -S git pull
+            
+            # Активируем виртуальное окружение
+            source venv/bin/activate
+            
+            # Обновляем зависимости
+            pip install -r requirements.txt
+            
+            # Создаем файл .env из отдельных секретов
+            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" > .env
+            echo "BOT_TOKEN=${{ secrets.BOT_TOKEN }}" >> .env
+            echo "MISTRAL_API_KEY=${{ secrets.MISTRAL_API_KEY }}" >> .env
+
+            echo "TELEGRAM_BOT_USERNAME=${{ secrets.TELEGRAM_BOT_USERNAME }}" >> .env
+
+            echo "TELEGRAM_MINI_APP_URL=${{ secrets.TELEGRAM_MINI_APP_URL }}" >> .env
+            echo "BASE_MINIAPP_URL=${{ secrets.BASE_MINIAPP_URL }}" >> .env
+
+            echo "PHOTO_ERROR=${{ secrets.PHOTO_ERROR }}" >> .env
+            echo "PHOTO_START=${{ secrets.PHOTO_START }}" >> .env
+            echo "PHOTO_HELP=${{ secrets.PHOTO_HELP }}" >> .env
+            echo "PHOTO_INFO=${{ secrets.PHOTO_INFO }}" >> .env
+            echo "PHOTO_THANKS=${{ secrets.PHOTO_THANKS }}" >> .env
+
+            echo "SAPPORT_URL=${{ secrets.SAPPORT_URL }}" >> .env
+            echo "YOUR_PERSONAL_CHAT_ID=${{ secrets.YOUR_PERSONAL_CHAT_ID }}" >> .env
+
+            # Сбор статики 
+            python manage.py collectstatic --noinput
+            # Перезапускаем systemd сервис gunicorn а он автоматически перезапустит сайт
+            echo "${{ secrets.PASSWORD }}" | sudo -S systemctl restart capybara_api
