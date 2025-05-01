@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'capybara_categories',
     'capybara_countries',
     'capybara_currencies',
+    'capybara_premium',
     'drf_yasg',
     
 ]

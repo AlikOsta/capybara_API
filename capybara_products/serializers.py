@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.urls import reverse
-from .models import Product, ProductImage, Favorite, ProductComment, PremiumPlan, ProductPremium
+from .models import Product, ProductImage, Favorite
 from django.utils import timezone
 
 
@@ -73,10 +73,6 @@ class ProductListSerializer(serializers.ModelSerializer):
             return bool(favs)
         
         return obj.favorited_by.filter(user=user).exists()
-    
-    def get_comments_count(self, obj):
-        """Возвращает количество одобренных комментариев к продукту"""
-        return obj.comments.filter(status=3).count()
 
 
 class ProductDetailSerializer(ProductListSerializer):
@@ -100,23 +96,6 @@ class ProductDetailSerializer(ProductListSerializer):
     class Meta:
         model = Product
         fields = "__all__"
-
-    def get_comments(self, obj):
-        """
-        Возвращает одобренные комментарии к продукту.
-        Для автора продукта возвращает все комментарии.
-        """
-        request = self.context.get('request')
-        queryset = obj.comments.all()
-        
-        if request and request.user != obj.author:
-            queryset = queryset.filter(status=3)  
-            
-        return ProductCommentSerializer(
-            queryset, 
-            many=True, 
-            context=self.context
-        ).data
 
 
 class ProductCreateUpdateSerializer(serializers.ModelSerializer):
@@ -190,124 +169,4 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
 
         return product
 
-
-class ProductCommentSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для комментариев к продуктам.
-    
-    Предоставляет информацию о комментариях:
-    - id: уникальный идентификатор комментария
-    - user: информация о пользователе, оставившем комментарий
-    - text: текст комментария
-    - created_at: дата создания комментария
-    - updated_at: дата обновления комментария
-    """
-    user = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = ProductComment
-        fields = ['id', 'user', 'text', 'created_at', 'updated_at', 'status']
-        read_only_fields = ['id', 'user', 'created_at', 'updated_at', 'status']
-    
-    def get_user(self, obj):
-        """Возвращает базовую информацию о пользователе"""
-        request = self.context.get('request')
-        user_url = reverse('user-detail', kwargs={'pk': obj.user.pk})
-        
-        if request:
-            user_url = request.build_absolute_uri(user_url)
-            
-        return {
-            'id': obj.user.id,
-            'username': obj.user.username,
-            'photo_url': obj.user.photo_url,
-            'user_url': user_url
-        }
-
-
-class ProductCommentCreateUpdateSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для создания и обновления комментариев к продуктам.
-    
-    Позволяет создавать и обновлять комментарии с указанием:
-    - text: текст комментария
-    """
-    class Meta:
-        model = ProductComment
-        fields = ['text']
-        
-    def validate(self, data):
-        """
-        Проверяет, что пользователь не пытается создать второй комментарий к тому же продукту.
-        """
-        request = self.context.get('request')
-        product_id = self.context.get('product_id')
-        
-        if self.instance is None:
-            if ProductComment.objects.filter(user=request.user, product_id=product_id).exists():
-                raise serializers.ValidationError(
-                    "You have already commented on this product. Please update your existing comment."
-                )
-        
-        return data
-    
-
-class PremiumPlanSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для планов премиум-подписки.
-
-    Предоставляет информацию о плане премиум-подписки:
-    - id: уникальный идентификатор плана
-    - name: название плана
-    - description: описание плана
-    - price: цена плана
-    - duration_days: продолжительность плана (в днях)
-    """
-    class Meta:
-        model = PremiumPlan
-        fields = ['id', 'name', 'description', 'price', 'duration_days']
-
-
-class ProductPremiumSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для отображения информации о премиум-статусе продукта
-
-    """
-    plan = PremiumPlanSerializer(read_only=True)
-    days_left = serializers.SerializerMethodField()
-
-    class Meta:
-        model = ProductPremium
-        fields = '__all__'
-
-    def get_days_left(self, obj) -> int:
-        """
-        Возвращает количество дней, оставшихся до окончания премиум-статуса продукта.
-        """
-        if not obj.end_date:
-            return 0
-        
-        now = timezone.now()
-
-        if obj.end_date <= now:
-            return 0
-        
-        delta = obj.end_date - now
-        return delta.days
-    
-
-class ProductPremiumCreateSerializer(serializers.Serializer):
-    """
-    Сериализатор для активации премиум-статуса продукта
-    """
-
-    plan_id = serializers.IntegerField()
-
-    def validate_plan_id(self, value):
-        try:
-            plan = PremiumPlan.objects.get(pk=value, is_active=True)
-            return plan 
-        except PremiumPlan.DoesNotExist:
-            raise serializers.ValidationError("Invalid plan ID")
-        
-    
+ 
