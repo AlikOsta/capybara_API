@@ -131,11 +131,11 @@ SAPPORT_URL = os.getenv("SAPPORT_URL")
 
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY") 
 
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
-
 STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static_src',
+]
 
 STATIC_ROOT = '/home/al/capybara_API/static'
 
