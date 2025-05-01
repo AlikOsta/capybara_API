@@ -16,13 +16,12 @@ ALLOWED_HOSTS = [
     '217.114.2.208', 
     '127.0.0.1', 
     'localhost', 
-    'capybarashop.store', 
-    'capybarashop.ru',
+    'capybaramarket.ru',
     ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://capybarashop.store',
-    'https://capybarashop.ru', 
+    'https://capybaramarket.ru',
+    'http://capybaramarket.ru', 
     'https://217.114.2.208', 
     'http://217.114.2.208',
     'https://127.0.0.1',
