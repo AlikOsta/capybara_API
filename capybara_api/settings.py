@@ -12,7 +12,13 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['217.114.2.208', '127.0.0.1', 'localhost', 'capybarashop.store', 'capybarashop.ru']
+ALLOWED_HOSTS = [
+    '217.114.2.208', 
+    '127.0.0.1', 
+    'localhost', 
+    'capybarashop.store', 
+    'capybarashop.ru',
+    ]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://capybarashop.store',

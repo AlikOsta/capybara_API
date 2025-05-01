@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
+from capybara_products.models import Product
+
 
 class PremiumPlan(models.Model):
     name = models.CharField(max_length=30, verbose_name="Name")
@@ -19,7 +21,7 @@ class PremiumPlan(models.Model):
     
 
 class ProductPremium(models.Model):
-    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='premium_product', verbose_name='Product')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='premium_product', verbose_name='Product')
     plan = models.ForeignKey('PremiumPlan', on_delete=models.CASCADE, verbose_name='Premium plan')
     start_date = models.DateTimeField(default=timezone.now, verbose_name='Start date')
     end_date = models.DateTimeField(verbose_name='End date')
