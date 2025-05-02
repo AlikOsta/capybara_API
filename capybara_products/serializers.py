@@ -49,7 +49,6 @@ class ProductListSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     product_url = serializers.HyperlinkedIdentityField(
         view_name='product-detail', lookup_field='pk')
-    comments_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -91,7 +90,6 @@ class ProductDetailSerializer(ProductListSerializer):
     author_name = serializers.CharField(source='author.username', read_only=True)
     author_url = serializers.HyperlinkedRelatedField(
         view_name='user-detail', read_only=True, source='author')
-    comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
