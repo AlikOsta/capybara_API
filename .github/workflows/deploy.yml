@@ -35,7 +35,7 @@ jobs:
             echo "${{ secrets.PASSWORD }}" | sudo -S git pull
             
             # Активируем виртуальное окружение
-            source venv/bin/activate
+            source .venv/bin/activate
             
             # Обновляем зависимости
             pip install -r req.txt
