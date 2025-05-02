@@ -25,3 +25,50 @@ class City(models.Model):
 
     def __str__(self) -> str:
         return self.name
+    
+
+
+class Local(models.Model):
+    name = models.CharField(max_length=20, unique=True, verbose_name="Local")
+    order = models.SmallIntegerField(default=0, db_index=True, verbose_name="Order")
+    slug = models.SlugField(max_length=30, verbose_name="Slug")
+    super_Local = models.ForeignKey(
+        'SuperLocal',
+        on_delete=models.PROTECT,
+        null=True, blank=True,
+        related_name='sub_local',
+        verbose_name="Super Local"
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class SuperLocalManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(super_Local__isnull=True)
+
+
+class SuperLocal(Local):
+    objects = SuperLocalManager()
+
+    class Meta:
+        proxy = True
+        ordering = ['order', 'name']
+        verbose_name = 'Super Local'
+        verbose_name_plural = 'Super Locals'
+
+
+class SubLocalManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(super_Local__isnull=False)
+
+
+class SubLocal(Local):
+    objects = SubLocalManager()
+
+    class Meta:
+        proxy = True
+        ordering = ['super_Local__order', 'super_Local__name', 'order', 'name']
+        verbose_name = 'Sub Local'
+        verbose_name_plural = 'Sub Locals'
