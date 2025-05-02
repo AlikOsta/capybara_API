@@ -80,10 +80,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'capybara_api.wsgi.application'
 
+
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',    
+        'NAME': os.getenv("NAME_SQL"),                          
+        'USER': os.getenv("USER_SQL"),                             
+        'PASSWORD': os.getenv('PASSWORD_SQL'),                       
+        'HOST': os.getenv('HOST_SQL'),                          
+        'PORT': os.getenv("PORT_SQL"),                               
     }
 }
 

@@ -59,6 +59,12 @@ jobs:
             echo "SAPPORT_URL=${{ secrets.SAPPORT_URL }}" >> .env
             echo "YOUR_PERSONAL_CHAT_ID=${{ secrets.YOUR_PERSONAL_CHAT_ID }}" >> .env
 
+            echo "NAME_SQL=${{ secrets.NAME_SQL }}" >> .env
+            echo "USER_SQL=${{ secrets.USER_SQL }}" >> .env
+            echo "PORT_SQL=${{ secrets.PORT_SQL }}" >> .env
+            echo "HOST_SQL=${{ secrets.HOST_SQL }}" >> .env
+            echo "PASSWORD_SQL=${{ secrets.PASSWORD_SQL }}" >> .env
+
             # Сбор статики 
             python manage.py collectstatic --noinput
             
