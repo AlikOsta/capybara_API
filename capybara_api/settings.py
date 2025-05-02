@@ -19,6 +19,7 @@ ALLOWED_HOSTS = [
     'capybaramarket.ru',
     ]
 
+
 CSRF_TRUSTED_ORIGINS = [
     'https://capybaramarket.ru',
     'http://capybaramarket.ru', 
