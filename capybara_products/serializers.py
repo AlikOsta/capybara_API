@@ -113,14 +113,11 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
     
     Поля author, views_count и favorites_count являются только для чтения и устанавливаются автоматически.
     """
-    # images = serializers.ListField(
-    #     child=serializers.ImageField(),
-    #     write_only=True,
-    #     required=False
-    # )
-
-    # пока только одна картинка
-    images = serializers.ImageField(write_only=True, required=False)
+    images = serializers.ListField(
+        child=serializers.ImageField(),
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = Product
@@ -144,15 +141,11 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
         Автоматически устанавливает текущего пользователя как автора продукта.
         """
         images_data = validated_data.pop('images', [])
-        # ставим автора
         validated_data['author'] = self.context['request'].user
         product = super().create(validated_data)
 
-        # # создаём отдельные записи ProductImage — тут вызовется save() и process_image
-        # for img in images_data:
-        #     ProductImage.objects.create(product=product, image=img)
-
-        ProductImage.objects.create(product=product, image=images_data)
+        for img in images_data:
+            ProductImage.objects.create(product=product, image=img)
         return product
 
     def update(self, instance, validated_data):

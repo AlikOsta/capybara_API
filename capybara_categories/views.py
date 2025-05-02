@@ -1,13 +1,11 @@
 from rest_framework import viewsets
-from rest_framework.mixins import RetrieveModelMixin, ListModelMixin
 from rest_framework.permissions import AllowAny
 from django.db.models import Prefetch
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
 from .models import Category
 from .serializers import CategorySerializer, CategoryDetailSerializer
 from capybara_products.models import Product
+
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
