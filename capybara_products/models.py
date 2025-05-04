@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from capybara_categories.models import Category, SubCategory
+from capybara_countries.models import Country, City
+
 
 from .choices import STATUS_CHOICES
 from .utils_img import process_image
@@ -14,8 +16,8 @@ class Product(models.Model):
     subcategory = models.ForeignKey(SubCategory, on_delete=models.PROTECT, db_index=True, blank=True, null=True, related_name="products", verbose_name="Subcategory")
     title = models.CharField(max_length=50, db_index=True, verbose_name="Title")
     description = models.TextField(max_length = 550, verbose_name = "Description")
-    country = models.ForeignKey("capybara_countries.Country", on_delete=models.PROTECT, db_index=True, related_name='products_by_country', verbose_name="Country")
-    city = models.ForeignKey("capybara_countries.City", on_delete=models.PROTECT, db_index=True, related_name='products_by_city', verbose_name="City")
+    country = models.ForeignKey(Country, on_delete=models.PROTECT, db_index=True, related_name='products_by_country', verbose_name="Country")
+    city = models.ForeignKey(City, on_delete=models.PROTECT, db_index=True, related_name='products_by_city', verbose_name="City")
     price = models.IntegerField(verbose_name="Price")
     currency = models.ForeignKey("capybara_currencies.Currency", on_delete=models.PROTECT, verbose_name="Currency")
     status = models.IntegerField(choices=STATUS_CHOICES, default=0, verbose_name="Status")
