@@ -30,46 +30,31 @@ class Category(models.Model):
         return products.count()
     
 
-
-class Rubric(models.Model):
-    name = models.CharField(max_length=20, unique=True, verbose_name="Rubric")
+class SubCategory(models.Model):
+    name = models.CharField(max_length=50, unique=True, verbose_name="Subcategory")
     order = models.SmallIntegerField(default=0, db_index=True, verbose_name="Order")
-    slug = models.SlugField(max_length=30, verbose_name="Slug")
-    super_rubric = models.ForeignKey('SuperRubric', on_delete=models.PROTECT, null=True, blank=True, related_name='sub_rubrics', verbose_name="Super Rubric")
-    image = models.ImageField(upload_to='images/rubric_img/')
+    slug = models.SlugField(max_length=50, unique=True, verbose_name="Slug")
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories', verbose_name="Category")
+    image = models.ImageField(upload_to='images/subcat_img/')
 
-
-class SuperRubricManager(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset().filter(super_rubric__isnull=True)
-    
-
-class SuperRubric(Rubric):
-    objects = SuperRubricManager()
-    
-    def __str__(self) -> str:
+    def __str__(self):
         return self.name
     
-    class Meta:
-        proxy = True
-        ordering = ['order', 'name']
-        verbose_name = 'Super Rubric'
-        verbose_name_plural = 'Super Rubrics'
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        return reverse('subcategory-detail', kwargs={'slug': self.slug})
 
-class SubRubricManager(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset().filter(super_rubric__isnull=False)
+    def get_count_products(self):
+        products = self.products.filter(status=3)
+        return products.count()
     
-
-class SubRubric(Rubric):
-    objects = SubRubricManager()
-
-    def __str__(self)-> str:
-        return f'{self.super_rubric.name} - {self.name}'
-
     class Meta:
-        proxy = True
-        ordering = ['super_rubric__order', 'super_rubric__name', 'order', 'name']
-        verbose_name = 'Sub Rubric'
-        verbose_name_plural = 'Sub Rubrics'
+        verbose_name = "Subcategory"
+        verbose_name_plural = "Subcategories"
+        ordering = ['order']
+
+

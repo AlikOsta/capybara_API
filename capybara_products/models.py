@@ -2,13 +2,16 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
+from capybara_categories.models import Category, SubCategory
+
 from .choices import STATUS_CHOICES
 from .utils_img import process_image
 
 
 class Product(models.Model):
     author = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, verbose_name="Author")
-    category =models.ForeignKey("capybara_categories.SubRubric", on_delete=models.PROTECT, db_index=True, related_name="products", verbose_name="Category")
+    category =models.ForeignKey(Category, on_delete=models.PROTECT, db_index=True, related_name="products", verbose_name="Category")
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.PROTECT, db_index=True, blank=True, null=True, related_name="products", verbose_name="Subcategory")
     title = models.CharField(max_length=50, db_index=True, verbose_name="Title")
     description = models.TextField(max_length = 550, verbose_name = "Description")
     country = models.ForeignKey("capybara_countries.SuperLocal", on_delete=models.PROTECT, db_index=True, related_name='products_by_country', verbose_name="Country")
