@@ -1,18 +1,11 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import CategoryViewSet
 
-
-"""
-GET  /categories/v1/categories/
-
-GET  /categories/v1/categories/{slug}/
-"""
-
-router = DefaultRouter()
-router.register(r'categories', CategoryViewSet, basename='category')
-
+from django.urls import path
+from .views import (
+    CategoryAPIView, CategoryDetailAPIView, SubCategoryDetailAPIView
+)
 
 urlpatterns = [
-    path('v1/', include(router.urls)),
+    path('v1/', CategoryAPIView.as_view(), name='supercategory-list'),
+    path('v1/<slug:slug>/', CategoryDetailAPIView.as_view(), name='supercategory-detail'),
+    path('v1/<slug:super_slug>/<slug:slug>/', SubCategoryDetailAPIView.as_view(), name='subrcategory-detail'),
 ]
