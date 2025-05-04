@@ -40,6 +40,5 @@ class SubCategoryDetailAPIView(generics.RetrieveAPIView):
         return get_object_or_404(
             SubCategory,
             slug=sub_slug,
-            category__slug=super_slug,
-            
+            category__slug=super_slug  
         )
