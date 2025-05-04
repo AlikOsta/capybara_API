@@ -11,7 +11,7 @@ PATCH /users/v1/users/{pk}/
 """
 
 router = DefaultRouter()
-router.register(r'users', UserViewSet, basename='user')
+router.register(r'', UserViewSet, basename='user')
 
 urlpatterns = [
     path('v1/', include(router.urls)),

@@ -7,5 +7,5 @@ GET  /currencies/v1/currencies/
 
 
 urlpatterns = [
-    path('v1/currencies/', CurrencyViewSet.as_view({'get': 'list'}), name='currencies-list'),
+    path('v1/', CurrencyViewSet.as_view({'get': 'list'}), name='currencies-list'),
 ]

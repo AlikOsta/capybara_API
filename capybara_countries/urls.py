@@ -1,15 +1,7 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 from .views import CountryViewSet
 
-"""
-GET  /countries-cities/v1/countries/
-GET  /countries-cities/v1/countries/{pk}/
-"""
-
-router = DefaultRouter()
-router.register(r'countries', CountryViewSet, basename='country')
-
 urlpatterns = [
-    path('v1/', include(router.urls)),
+    path('v1/', CountryViewSet.as_view({'get': 'list'}), name='country-list'),
+    path('v1/<int:pk>/', CountryViewSet.as_view({'get': 'retrieve'}), name='country-detail'),
 ]
