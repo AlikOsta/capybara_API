@@ -38,7 +38,7 @@ jobs:
             source .venv/bin/activate
             
             # Обновляем зависимости
-            pip install -r req.txt
+            pip install -r requirements.txt
             
             # Создаем файл .env из отдельных секретов
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" > .env
