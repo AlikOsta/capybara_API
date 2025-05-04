@@ -33,7 +33,7 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
 
 
 class SubCategoryDetailSerializer(serializers.ModelSerializer):
-    super_category = serializers.ReadOnlyField(source='super_category.slug') 
+    category = serializers.ReadOnlyField(source='super_category.slug') 
     class Meta:
         model = SubCategory
         fields = ('id', 'name', 'slug', 'image', 'super_category')
