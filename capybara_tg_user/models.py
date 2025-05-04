@@ -8,10 +8,13 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 class TelegramUser(AbstractUser):
     telegram_id = models.BigIntegerField(unique=True, verbose_name='Telegram ID')
+    username = models.CharField(max_length=30, unique=True, verbose_name='Username')
+    first_name = models.CharField(max_length=50, blank=True, null=True, verbose_name='First Name')
+    last_name = models.CharField(max_length=50, blank=True, null=True, verbose_name='Last Name')
     photo_url = models.URLField(blank=True, null=True, verbose_name='Photo URL')
-    language =  models.CharField(max_length=5, default='en', verbose_name='Language')
-    country = models.ForeignKey('capybara_countries.Country', on_delete=models.PROTECT, verbose_name='Country', null=True, blank=True)
-    city = models.ForeignKey('capybara_countries.City', on_delete=models.PROTECT, verbose_name='City', null=True, blank=True)
+    language =  models.CharField(max_length=5, default='ru', verbose_name='Language')
+    country = models.ForeignKey('capybara_countries.Country', on_delete=models.PROTECT, verbose_name='Country', default=1)
+    city = models.ForeignKey('capybara_countries.City', on_delete=models.PROTECT, verbose_name='City', default=1)
     average_rating = models.FloatField(default=0, verbose_name='Average Rating')
     rating_count = models.PositiveIntegerField(default=0, verbose_name='Rating Count')
 

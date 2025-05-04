@@ -12,6 +12,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
     InputMediaPhoto,
+    WebAppInfo,
 )
 from aiogram.client.default import DefaultBotProperties
 
@@ -33,11 +34,16 @@ DONATE_PHOTO_URL = os.getenv("PHOTO_DONATE")
 THANKS_PHOTO_URL = os.getenv("PHOTO_THANKS")
 ERROR_PHOTO_URL = os.getenv("PHOTO_ERROR")
 
+URL = "https://www.capybaramarket.store/"
+
 SAPPORT_URL = os.getenv("SUPPORT_URL")
 
 def start_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Открыть мини-приложение", url="https://t.me/your_app?start=miniapp")],
+        [InlineKeyboardButton(
+            text="Открыть мини-приложение",
+            web_app=WebAppInfo(url=URL)  # замените на ваш URL
+        )],
         [InlineKeyboardButton(text="О нас", callback_data="about"),
         InlineKeyboardButton(text="Помощь", callback_data="help")],
         [InlineKeyboardButton(text="Поддержать проект ⭐️", callback_data="pay")],

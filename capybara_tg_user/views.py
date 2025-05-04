@@ -1,16 +1,124 @@
 
+import json
+import logging
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
+from urllib.parse import parse_qs
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import action
-from rest_framework.response import Response
 
 from .models import TelegramUser, UserRating
 from .serializers import (TelegramUserSerializer, 
     UserRatingSerializer, UserRatingCreateUpdateSerializer)
 
 from .permissions import IsSelfOrReadOnly, IsRatingAuthorOrReadOnly
+from .verify_telegram import verify_telegram_init_data
 
-class UserViewSet(viewsets.ModelViewSet):
+
+logger = logging.getLogger(__name__)
+
+
+class TelegramAuthView(APIView):
+    """
+    API для регистрации пользователя.
+
+    Аутентификация через Telegram Mini App.
+    Получает initData от фронтенда, проверяет его и выдаёт JWT-токены.
+    """
+    def post(self, request):
+        init_data = request.data.get('initData')
+        if not init_data:
+            return Response({'error': 'No initData provided'}, status=status.HTTP_400_BAD_REQUEST)
+        # 1
+        bot_token = settings.TELEGRAM_BOT_TOKEN
+        if not verify_telegram_init_data(init_data, bot_token):
+            return Response({"detail": "Invalid init_data"}, status=status.HTTP_403_FORBIDDEN)
+
+        # 2
+        params = parse_qs(init_data, keep_blank_values=True)
+        params = {k: v[0] for k, v in params.items()}
+        user_json = params.get('user')
+        if not user_json:
+            return Response({"detail": "No user data provided"}, status=status.HTTP_400_BAD_REQUEST)
+        user_data = json.loads(user_json)
+
+        tg_id = user_data.get('id')
+        if not tg_id:
+            return Response({"detail": "No Telegram ID provided"}, status=status.HTTP_400_BAD_REQUEST)
+        # 3
+        user, created = TelegramUser.objects.get_or_create(telegram_id=tg_id, defaults={
+            "username": user_data.get('username') or f"tg_{tg_id}",
+            "first_name": user_data.get('first_name', ''),
+            "last_name": user_data.get('last_name', ''),
+            "language": user_data.get('language_code', ''),
+        })
+        if not created:
+            # При повторном входе можно обновить имя/юзернейм на случай изменений в Telegram
+            user.first_name = user_data.get('first_name', user.first_name)
+            user.last_name  = user_data.get('last_name', user.last_name)
+            uname = user_data.get('username')
+            user.language = user_data.get('language_code', '')
+
+            if uname:
+                user.username = uname
+            user.save()
+
+        # 4 
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
+        # 5
+        response = Response({"detail": "Authentication successful"}
+                           , status=status.HTTP_200_OK)
+        cookie_max_age = 3600 * 24 * 7
+        response.set_cookie(
+            key='access_token', value=access_token,
+            max_age=60*15, httponly=True, secure=True, samesite='Strict'
+        )
+        response.set_cookie(
+            key='refresh_token', value=refresh_token,
+            max_age=cookie_max_age, httponly=True, secure=True, samesite='Strict'
+        )
+        return response
+    
+
+class TokenRefreshFromCookieView(APIView):
+    """
+    API для Обновление access-токена через refresh-токен.
+
+    Обновление access-токена через refresh-токен в HttpOnly cookie.
+    """
+    def post(self, request):
+        refresh_token = request.COOKIES.get('refresh_token')
+        if not refresh_token:
+            return Response({"detail": "Refresh token missing"}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            refresh = RefreshToken(refresh_token)
+        except TokenError:
+            logger.error("Invalid refresh token")
+            return Response({"detail": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        new_access = str(refresh.access_token)
+        response = Response({"detail": "Access token refreshed"})
+        # Обновляем куку access_token
+        response.set_cookie(
+            key='access_token', value=new_access,
+            max_age=60*15, httponly=True, secure=True, samesite='Strict'
+        )
+        return response
+
+
+
+class UserViewSet(mixins.ListModelMixin,
+                  mixins.RetrieveModelMixin,
+                  mixins.UpdateModelMixin,
+                  viewsets.GenericViewSet):
     """
     API для работы с пользователями Telegram.
     
@@ -21,66 +129,6 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = TelegramUserSerializer
     permission_classes = [IsAuthenticated, IsSelfOrReadOnly]
 
-    # def list(self, request, *args, **kwargs):
-    #     """
-    #     Получить список всех пользователей.
-        
-    #     Требуется авторизация. Возвращает список всех пользователей Telegram
-    #     с их основными данными и списком созданных ими продуктов.
-    #     """
-    #     return super().list(request, *args, **kwargs)
-
-    # def retrieve(self, request, *args, **kwargs):
-    #     """
-    #     Получить детальную информацию о пользователе по его идентификатору.
-        
-    #     Требуется авторизация. Возвращает информацию о конкретном пользователе,
-    #     включая его профиль и список созданных им продуктов.
-    #     """
-    #     return super().retrieve(request, *args, **kwargs)
-
-    # def update(self, request, *args, **kwargs):
-    #     """
-    #     Полностью обновить данные пользователя.
-        
-    #     Требуется авторизация. Пользователь может обновлять только свои собственные данные.
-    #     Поля id, username и telegram_id не могут быть изменены.
-    #     """
-    #     return super().update(request, *args, **kwargs)
-
-    # def partial_update(self, request, *args, **kwargs):
-    #     """
-    #     Частично обновить данные пользователя.
-        
-    #     Требуется авторизация. Пользователь может обновлять только свои собственные данные.
-    #     Можно обновить одно или несколько полей. Поля id, username и telegram_id не могут быть изменены.
-    #     """
-    #     return super().partial_update(request, *args, **kwargs)
-    
-    # @action(detail=True, methods=['get'])
-    # def rating(self, request, pk=None):
-    #     """
-    #     Получить рейтинг пользователя.
-        
-    #     Возвращает средний рейтинг пользователя и количество полученных оценок.
-    #     """
-    #     user = self.get_object()
-    #     return Response({
-    #         'average_rating': user.average_rating,
-    #         'ratings_count': user.ratings_count
-    #     })
-    
-    # @action(detail=False, methods=['get'])
-    # def my_ratings(self, request):
-    #     """
-    #     Получить оценки, оставленные текущим пользователем.
-        
-    #     Требуется авторизация. Возвращает список оценок, которые текущий пользователь оставил другим пользователям.
-    #     """
-    #     ratings = UserRating.objects.filter(from_user=request.user).select_related('to_user')
-    #     serializer = UserRatingSerializer(ratings, many=True, context={'request': request})
-    #     return Response(serializer.data)
-    
 
 class UserRatingViewSet(viewsets.ModelViewSet):
     """
@@ -121,47 +169,4 @@ class UserRatingViewSet(viewsets.ModelViewSet):
         to_user_id = self.kwargs.get('user_pk')
         serializer.save(from_user=self.request.user, to_user_id=to_user_id)
     
-    def list(self, request, *args, **kwargs):
-        """
-        Получить список оценок пользователя.
-        """
-        return super().list(request, *args, **kwargs)
-    
-    def create(self, request, *args, **kwargs):
-        """
-        Оценить пользователя.
-        
-        Требуется авторизация. Один пользователь может оставить только одну оценку другому пользователю.
-        Пользователь не может оценить сам себя.
-        """
-        return super().create(request, *args, **kwargs)
-    
-    def retrieve(self, request, *args, **kwargs):
-        """
-        Получить детальную информацию об оценке.
-        """
-        return super().retrieve(request, *args, **kwargs)
-    
-    def update(self, request, *args, **kwargs):
-        """
-        Обновить оценку (полное обновление).
-        
-        Требуется авторизация. Доступно только автору оценки.
-        """
-        return super().update(request, *args, **kwargs)
-    
-    def partial_update(self, request, *args, **kwargs):
-        """
-        Обновить оценку (частичное обновление).
-        
-        Требуется авторизация. Доступно только автору оценки.
-        """
-        return super().partial_update(request, *args, **kwargs)
-    
-    def destroy(self, request, *args, **kwargs):
-        """
-        Удалить оценку.
-        
-        Требуется авторизация. Доступно только автору оценки.
-        """
-        return super().destroy(request, *args, **kwargs)
+

@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
-from .views import UserViewSet, UserRatingViewSet
+from .views import UserViewSet, UserRatingViewSet, TelegramAuthView, TokenRefreshFromCookieView
 
 """
 GET /users/v1/users/
@@ -13,10 +13,8 @@ PATCH /users/v1/users/{pk}/
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 
-ratings_router = routers.NestedSimpleRouter(router, r'users', lookup='user')
-# ratings_router.register(r'ratings', UserRatingViewSet, basename='user-rating')
-
 urlpatterns = [
     path('v1/', include(router.urls)),
-    # path('v1/', include(ratings_router.urls)),
+    path('v1/auth/telegram/', TelegramAuthView.as_view(), name='telegram-auth'),
+    path('v1/auth/refresh/', TokenRefreshFromCookieView.as_view(), name='token-refresh'),
 ]
