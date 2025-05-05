@@ -41,4 +41,4 @@ class SubCategoryDetailAPIView(generics.RetrieveAPIView):
             SubCategory,
             slug=sub_slug,
             category__slug=super_slug  
-        )
+        ) # изменения 
