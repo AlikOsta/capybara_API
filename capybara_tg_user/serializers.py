@@ -20,9 +20,7 @@ class TelegramUserSerializer(serializers.ModelSerializer):
     - products: список продуктов, созданных пользователем
     """
 
-    user_url = serializers.HyperlinkedIdentityField(
-        view_name='user-detail', lookup_field='pk')
-
+    user_url = serializers.HyperlinkedIdentityField(view_name='user-detail', lookup_field='pk')
     products = ProductListSerializer(many=True, read_only=True, source='product_set')
     average_rating = serializers.FloatField(read_only=True)
     ratings_count = serializers.IntegerField(read_only=True)

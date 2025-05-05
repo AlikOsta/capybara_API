@@ -127,7 +127,7 @@ class UserViewSet(mixins.ListModelMixin,
     """
     queryset = TelegramUser.objects.all()
     serializer_class = TelegramUserSerializer
-    permission_classes = [IsAuthenticated, IsSelfOrReadOnly]
+    permission_classes = [IsSelfOrReadOnly]
 
 
 class UserRatingViewSet(viewsets.ModelViewSet):
@@ -137,7 +137,7 @@ class UserRatingViewSet(viewsets.ModelViewSet):
     Предоставляет возможность получать, создавать, обновлять и удалять рейтинги пользователей.
     Один пользователь может оставить только одну оценку другому пользователю.
     """
-    permission_classes = [IsAuthenticated, IsRatingAuthorOrReadOnly]
+    permission_classes = [IsRatingAuthorOrReadOnly]
     
     def get_queryset(self):
         """
