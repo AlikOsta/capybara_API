@@ -198,9 +198,9 @@ LOGGING = {
 
 AUTH_USER_MODEL = 'capybara_tg_user.TelegramUser'
 
-# CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = True
 
-# CORS_ALLOWED_ORIGINS = [
-#     "https://capybaramarket.ru",
-#     "http://capybaramarket.ru",
-# ]
+CORS_ALLOWED_ORIGINS = [
+    "https://capybaramarket.ru",
+    "http://capybaramarket.ru",
+]

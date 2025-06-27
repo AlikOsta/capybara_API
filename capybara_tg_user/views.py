@@ -33,10 +33,12 @@ class TelegramAuthView(APIView):
     def post(self, request):
         init_data = request.data.get('initData')
         if not init_data:
+            logger.error("No initData provided")
             return Response({'error': 'No initData provided'}, status=status.HTTP_400_BAD_REQUEST)
         # 1
         bot_token = settings.TELEGRAM_BOT_TOKEN
         if not verify_telegram_init_data(init_data, bot_token):
+            logger.error("Invalid initData")
             return Response({"detail": "Invalid init_data"}, status=status.HTTP_403_FORBIDDEN)
 
         # 2
@@ -44,11 +46,13 @@ class TelegramAuthView(APIView):
         params = {k: v[0] for k, v in params.items()}
         user_json = params.get('user')
         if not user_json:
+            logger.error("No user data provided")
             return Response({"detail": "No user data provided"}, status=status.HTTP_400_BAD_REQUEST)
         user_data = json.loads(user_json)
 
         tg_id = user_data.get('id')
         if not tg_id:
+            logger.error("No Telegram ID provided")
             return Response({"detail": "No Telegram ID provided"}, status=status.HTTP_400_BAD_REQUEST)
         # 3
         user, created = TelegramUser.objects.get_or_create(telegram_id=tg_id, defaults={
@@ -59,10 +63,10 @@ class TelegramAuthView(APIView):
         })
         if not created:
             # При повторном входе можно обновить имя/юзернейм на случай изменений в Telegram
-            user.first_name = user_data.get('first_name', user.first_name)
-            user.last_name  = user_data.get('last_name', user.last_name)
+            # user.first_name = user_data.get('first_name', user.first_name)
+            # user.last_name  = user_data.get('last_name', user.last_name)
             uname = user_data.get('username')
-            user.language = user_data.get('language_code', '')
+            # user.language = user_data.get('language_code', '')
 
             if uname:
                 user.username = uname
@@ -106,7 +110,6 @@ class TokenRefreshFromCookieView(APIView):
 
         new_access = str(refresh.access_token)
         response = Response({"detail": "Access token refreshed"})
-        # Обновляем куку access_token
         response.set_cookie(
             key='access_token', value=new_access,
             max_age=60*15, httponly=True, secure=True, samesite='Strict'
